@@ -1,7 +1,7 @@
 use diesel::{QueryDsl, QueryResult, RunQueryDsl, SelectableHelper};
 use rocket::{get, post, Response};
 use crate::database::establish_connection;
-use crate::models:: {NewUser, User, LoginRequest};
+use crate::models::{NewUser, User, LoginRequest, TokenResponse};
 // import Status
 use rocket::http::Status;
 use rocket::serde::json::Json;
@@ -11,7 +11,8 @@ use crate::responses::MessageResponse;
 use rocket::response::status;
 use crate::schema::users::dsl::*;
 use diesel::prelude::*;
-use crate::utils::{status_message, verify_password};
+use crate::utils::*;
+use crate::auth::*;
 
 #[get("/")]
 pub fn index() -> &'static str {
@@ -23,7 +24,7 @@ pub fn index() -> &'static str {
 #[post("/register", data = "<user>")]
 pub fn create(user: Json<NewUser>) -> (Status, Json<MessageResponse>){
     let mut new_user : NewUser =  user.into_inner();
-    new_user.password = crate::utils::hash_password(&new_user.password);
+    new_user.password = hash_password(&new_user.password);
     let connection = &mut  establish_connection();
     let user:QueryResult<User> = diesel::insert_into(crate::schema::users::table)
         .values(&new_user)
@@ -58,31 +59,43 @@ pub fn create(user: Json<NewUser>) -> (Status, Json<MessageResponse>){
 }
 
 #[post("/login", data = "<payload>")]
-pub fn login(payload: Json<LoginRequest>) -> (Status, Json<MessageResponse>){
+pub fn login(payload: Json<LoginRequest>) -> (Status, Result<Json<TokenResponse>, Json<MessageResponse>>){
     let connection = &mut establish_connection();
     let data = payload.into_inner();
-    let res= users
+
+    // Attempt to retrieve the user from the database
+    let user_result = users
         .filter(email.eq(&data.email))
         .select(User::as_select())
-        .get_result(connection);
+        .get_result::<User>(connection);
 
-    if let Err(err) = res {
-        if let Error::NotFound = err {
+    let user = match user_result {
+        Ok(user) => user,
+        Err(diesel::result::Error::NotFound) => {
             println!("User not found");
-            return status_message(Status::NotFound, "User not found");
-        } else {
-            println!("Internal Server Error: {:?}", err);
-            return status_message(Status::InternalServerError, "Internal Server Error");
+            return (Status::NotFound, Err(Json(MessageResponse { message: "User not found".to_string() })));
+        },
+        Err(_) => {
+            println!("Database error occurred");
+            return (Status::InternalServerError, Err(Json(MessageResponse { message: "Internal Server Error".to_string() })));
         }
-    }
+    };
 
-    let user = res.unwrap();
-    if verify_password(&data.password, &user.password) {
-        println!("User found: {:?}", user);
-        status_message(Status::Ok, "User found")
-    } else {
+    // Check if the password is correct
+    if !verify_password(&data.password, &user.password) {
         println!("Invalid password");
-        status_message(Status::Unauthorized, "Invalid password")
+        return (Status::Unauthorized, Err(Json(MessageResponse { message: "Invalid password".to_string() })));
     }
 
+    // Attempt to create a JWT for the user
+    let jwt = match create_jwt(&user.email) {
+        Ok(jwt) => jwt,
+        Err(_) => {
+            println!("Failed to create JWT");
+            return (Status::InternalServerError, Err(Json(MessageResponse { message: "Internal Server Error".to_string() })));
+        }
+    };
+
+    println!("Login successful: User ID {}", user.id);
+    (Status::Ok, Ok(Json(TokenResponse { token: jwt })))
 }
