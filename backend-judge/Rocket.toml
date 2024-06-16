@@ -1,0 +1,20 @@
+[default]
+api_key = "secret-api-key"
+temp_dir = "./media/tmp"
+media_root = "./media"
+
+[debug]
+api_key = "secret-api-key"
+temp_dir = "./media/tmp"
+media_root = "./media"
+
+[release]
+address = "0.0.0.0"
+port = 8000
+api_key = "secret-api-key"
+temp_dir = "./media/tmp"
+media_root = "./media"
+
+[global.limits]
+data-form = "5MiB"
+file = "5MiB"

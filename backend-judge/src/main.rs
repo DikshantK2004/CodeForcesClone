@@ -8,6 +8,8 @@ use crate::routes::users::{create, index, login};
 pub mod models;
 pub mod schema;
 use std::env;
+use crate::routes::contests::create_contest;
+
 pub mod responses;
 pub mod auth;
 
@@ -16,8 +18,7 @@ pub mod auth;
 async fn main() -> shuttle_rocket::ShuttleRocket {
 
 
-    let rocket = rocket::build().mount("/", routes![index, create, login]);
-    let token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJlbWFpbCI6ImhlbGxvIiwiZXhwIjoxNzE3OTM3ODIyfQ.0XR-vScWnHLJ1ui6izzNh_50pzF-VsChhtZYf1lUmtpw1YKt_rTvRJoymYbhEAgBQcbso1S2lS2bJi4Tq04yhQ";
+    let rocket = rocket::build().mount("/", routes![index, create, login, create_contest]);
 
     Ok(rocket.into())
 }

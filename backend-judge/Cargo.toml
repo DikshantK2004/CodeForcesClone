@@ -14,3 +14,4 @@ serde = { version = "1.0.203", features = ["derive"] }
 pwhash = "1.0.0"
 jsonwebtoken = "9.2.0"
 tokio = { version = "1.26.0", features = ["macros",  "sync", "time"] }
+config = "0.14.0"

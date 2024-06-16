@@ -40,46 +40,46 @@ pub struct Claims {
 pub struct TokenResponse {
     pub token: String,
 }
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ContestRequest{
-    pub name: String,
-    pub description: String,
-    pub start_date: chrono::Utc::datetime,
-    pub end_date: chrono::Utc::datetime,
-    pub creator_id: i32,
-    pub problems: Vec<ProblemInput>,
-}
-
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ProblemInput{
-    pub name: String,
-    pub content: String,
-    pub test_cases: Vec<TestCase>
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct TestCase{
-    pub input: String,
-    pub output: String
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Contest{
-    pub id: i32,
-    pub name: String,
-    pub description: String,
-    pub start_date: chrono::Utc::datetime,
-    pub end_date: chrono::Utc::datetime,
-    pub creator_id: i32,
-    pub problems: Option<Vec<Problem>>
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Problem{
-    pub id: i32,
-    pub name: String,
-    pub content: String,
-    pub test_cases: Option<Vec<TestCase>>
-}
+//
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct ContestRequest{
+//     pub name: String,
+//     pub description: String,
+//     pub start_date: chrono::Utc::datetime,
+//     pub end_date: chrono::Utc::datetime,
+//     pub creator_id: i32,
+//     pub problems: Vec<ProblemInput>,
+// }
+//
+//
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct ProblemInput{
+//     pub name: String,
+//     pub content: String,
+//     pub test_cases: Vec<TestCase>
+// }
+//
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct TestCase{
+//     pub input: String,
+//     pub output: String
+// }
+//
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct Contest{
+//     pub id: i32,
+//     pub name: String,
+//     pub description: String,
+//     pub start_date: chrono::Utc::datetime,
+//     pub end_date: chrono::Utc::datetime,
+//     pub creator_id: i32,
+//     pub problems: Option<Vec<Problem>>
+// }
+//
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct Problem{
+//     pub id: i32,
+//     pub name: String,
+//     pub content: String,
+//     pub test_cases: Option<Vec<TestCase>>
+// }
