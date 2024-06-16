@@ -16,5 +16,5 @@ temp_dir = "./media/tmp"
 media_root = "./media"
 
 [global.limits]
-data-form = "5MiB"
-file = "5MiB"
+data-form = "100MiB"
+file = "100MiB"
