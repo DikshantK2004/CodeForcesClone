@@ -2,5 +2,5 @@
 .shuttle-storage
 Secrets*.toml
 .env
-/media
-../test*
+/media/*
+../tests/

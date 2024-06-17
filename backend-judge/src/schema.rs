@@ -1,16 +1,29 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    contest (id) {
-        id -> Int4,
+    contests (id) {
+        #[max_length = 255]
+        id -> Varchar,
         #[max_length = 255]
         name -> Varchar,
-        description -> Text,
+        #[max_length = 2000]
+        description -> Varchar,
+        num_problems -> Int4,
         start_date -> Timestamp,
         end_date -> Timestamp,
         created_at -> Timestamp,
         updated_at -> Timestamp,
         creator_id -> Int4,
+    }
+}
+
+diesel::table! {
+    problems (id) {
+        #[max_length = 255]
+        id -> Varchar,
+        num_tests -> Int4,
+        #[max_length = 255]
+        contest_id -> Varchar,
     }
 }
 
@@ -27,9 +40,11 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(contest -> users (creator_id));
+diesel::joinable!(contests -> users (creator_id));
+diesel::joinable!(problems -> contests (contest_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-    contest,
+    contests,
+    problems,
     users,
 );

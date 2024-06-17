@@ -12,7 +12,7 @@ use crate::routes::contests::create_contest;
 
 pub mod responses;
 pub mod auth;
-pub mod check;
+pub mod contest_utils;
 
 #[shuttle_runtime::main]
 async fn main() -> shuttle_rocket::ShuttleRocket {

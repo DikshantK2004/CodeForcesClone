@@ -1,9 +1,14 @@
+use std::str::FromStr;
+use chrono::{DateTime, NaiveDateTime, Utc};
+use diesel::dsl::date;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use rocket::data::FromData;
 use rocket::serde::{Deserialize, Serialize};
-use crate::schema::users;
-use rocket::{time};
+use crate::schema::{users, problems, contests};
+use rocket::{FromForm, time};
+use rocket::fs::TempFile;
+use rocket::serde::json::Json;
 
 // This struct represents a row in the `users` table
 #[derive(Queryable,Debug, Serialize, Deserialize, Selectable)]
@@ -55,8 +60,54 @@ pub struct ContestRequest{
 
     // pub solution_ext: String,
 }
+impl ContestRequest{
+    pub fn num_tests(&self) -> Vec<i32>{
+        self.num_tests.clone()
+    }
+}
+
+#[derive(Debug, Serialize, Queryable, Selectable, Insertable)]
+pub struct Contest{
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub start_date: NaiveDateTime,
+    pub end_date: NaiveDateTime,
+    pub creator_id: i32,
+    pub num_problems: i32,
+    pub created_at: Option<NaiveDateTime>,
+    pub updated_at: Option<NaiveDateTime>,
+}
 
 
+impl Contest{
+    pub fn from_request(id: &str, req: ContestRequest) -> Contest{
+        Contest{
+            id: id.to_string(),
+            name: req.name,
+            description: req.description,
+            start_date: NaiveDateTime::parse_from_str(&req.start_date, "%d-%m-%Y %H:%M:%S").unwrap(),
+            end_date: NaiveDateTime::parse_from_str(&req.start_date, "%d-%m-%Y %H:%M:%S").unwrap(),
+            creator_id: req.creator_id,
+            num_problems: req.num_problems,
+            created_at: None,
+            updated_at: None
+        }
+    }
+}
+#[derive(Debug, Queryable, Selectable, Insertable)]
+pub struct Problem{
+    pub id: String,
+    pub num_tests: i32,
+    pub contest_id: String,
+}
+
+
+#[derive(FromForm)]
+pub struct ContestData<'f> {
+    pub file: TempFile<'f>,
+    pub data: Json<ContestRequest>
+}
 
 //
 // #[derive(Debug, Serialize, Deserialize)]

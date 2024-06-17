@@ -4,10 +4,10 @@ use std::fs::File;
 use std::io::Read;
 use zip::ZipArchive; // zip 0.5.13
 
-fn build_req_map(num_probs: i32, nums_tests: Vec<i32>) -> HashMap<String, bool>{
+fn build_req_map(probs: &i32, nums_tests: &Vec<i32>) -> HashMap<String, bool>{
     let mut m: HashMap<String, bool> = HashMap::new();
     let mut problems = false;
-
+    let num_probs = *probs;
     for i  in 1..=num_probs {
         m.insert(format!("problem_{}/", i), false);
         m.insert(format!("problem_{}/problem.md", i), false);
@@ -19,13 +19,12 @@ fn build_req_map(num_probs: i32, nums_tests: Vec<i32>) -> HashMap<String, bool>{
         }
     }
 
-    println!("{:?}", m);
 
     return m;
 }
 
 
-pub fn checker(name: &str, num_probs: i32, nums_tests: Vec<i32>) -> Result<(), String>{
+pub fn checker(name: &str, num_probs: &i32, nums_tests: &Vec<i32>) -> Result<(), String>{
 
     // check for a folder named problems at top level
 
@@ -35,14 +34,13 @@ pub fn checker(name: &str, num_probs: i32, nums_tests: Vec<i32>) -> Result<(), S
     let mut archive = ZipArchive::new(archive).unwrap();
 
     for idx in 0..archive.len() {
-        let mut entry = archive.by_index(idx).unwrap();
+        let entry = archive.by_index(idx).unwrap();
         let name = entry.enclosed_name();
 
 
         // println!("Entry: {:?}", name.unwrap());
         if let Some(name) = name {
             let n = name.to_str().unwrap();
-            println!("Entry: {:?}", n);
             if m.contains_key(n){
                 m.insert(n.to_string(), true);
             }
@@ -59,6 +57,24 @@ pub fn checker(name: &str, num_probs: i32, nums_tests: Vec<i32>) -> Result<(), S
         }
     }
 
+
+    Ok(())
+}
+
+
+pub fn save_zip(file_path: &str, save_file_name: &str) -> Result<(), String>{
+    let output = std::process::Command::new("unzip")
+        .arg(file_path)
+        .arg("-d")
+        .arg(String::from("./data/") + save_file_name)
+        .output()
+        .expect("failed to execute process");
+
+    if !output.status.success(){
+        // remove if something was unzipped
+        std::fs::remove_dir_all(String::from("./data/") + save_file_name).expect("Couldn't  remove directory");
+        return Err(String::from("Error unzipping file"));
+    }
 
     Ok(())
 }
