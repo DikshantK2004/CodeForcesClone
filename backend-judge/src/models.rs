@@ -66,7 +66,7 @@ impl ContestRequest{
     }
 }
 
-#[derive(Debug, Serialize, Queryable, Selectable, Insertable)]
+#[derive(Debug, Serialize, Queryable, Selectable, Insertable, AsChangeset)]
 pub struct Contest{
     pub id: String,
     pub name: String,
@@ -87,7 +87,7 @@ impl Contest{
             name: req.name,
             description: req.description,
             start_date: NaiveDateTime::parse_from_str(&req.start_date, "%d-%m-%Y %H:%M:%S").unwrap(),
-            end_date: NaiveDateTime::parse_from_str(&req.start_date, "%d-%m-%Y %H:%M:%S").unwrap(),
+            end_date: NaiveDateTime::parse_from_str(&req.end_date, "%d-%m-%Y %H:%M:%S").unwrap(),
             creator_id: req.creator_id,
             num_problems: req.num_problems,
             created_at: None,
@@ -107,6 +107,18 @@ pub struct Problem{
 pub struct ContestData<'f> {
     pub file: TempFile<'f>,
     pub data: Json<ContestRequest>
+}
+
+
+#[derive(Serialize)]
+pub struct ContestResponse{
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub start_date: NaiveDateTime,
+    pub end_date: NaiveDateTime,
+    pub creator_id: i32,
+    pub num_problems: i32,
 }
 
 //

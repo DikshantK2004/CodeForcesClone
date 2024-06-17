@@ -62,7 +62,7 @@ pub fn checker(name: &str, num_probs: &i32, nums_tests: &Vec<i32>) -> Result<(),
 }
 
 
-pub fn save_zip(file_path: &str, save_file_name: &str) -> Result<(), String>{
+pub fn extract_zip(file_path: &str, save_file_name: &str) -> Result<(), String>{
     let output = std::process::Command::new("unzip")
         .arg(file_path)
         .arg("-d")
@@ -74,6 +74,35 @@ pub fn save_zip(file_path: &str, save_file_name: &str) -> Result<(), String>{
         // remove if something was unzipped
         std::fs::remove_dir_all(String::from("./data/") + save_file_name).expect("Couldn't  remove directory");
         return Err(String::from("Error unzipping file"));
+    }
+
+    Ok(())
+}
+
+
+pub fn remove_zip(file_path: &str) -> Result<(), String>{
+    let output = std::process::Command::new("rm")
+        .arg(file_path)
+        .output()
+        .expect("failed to execute process");
+
+    if !output.status.success(){
+        return Err(String::from("Error removing file"));
+    }
+
+    Ok(())
+}
+
+
+pub fn remove_existing_contest(contest_id: &str) -> Result<(), String>{
+    let output = std::process::Command::new("rm")
+        .arg("-r")
+        .arg(String::from("./data/") + contest_id)
+        .output()
+        .expect("failed to execute process");
+
+    if !output.status.success(){
+        return Err(String::from("Error removing contest"));
     }
 
     Ok(())
