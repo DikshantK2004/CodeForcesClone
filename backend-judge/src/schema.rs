@@ -18,11 +18,10 @@ diesel::table! {
 }
 
 diesel::table! {
-    problems (id) {
-        #[max_length = 255]
-        id -> Varchar,
+    problems (contest_id, problem_num) {
         #[max_length = 255]
         name -> Varchar,
+        problem_num -> Int4,
         num_tests -> Int4,
         #[max_length = 255]
         contest_id -> Varchar,

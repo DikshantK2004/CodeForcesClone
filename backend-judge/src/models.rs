@@ -69,7 +69,7 @@ impl ContestRequest{
     }
 }
 
-#[derive(Debug, Serialize, Queryable, Selectable, Insertable, AsChangeset)]
+#[derive(Debug, Serialize, Queryable, Selectable, Insertable, AsChangeset, Clone)]
 pub struct Contest{
     pub id: String,
     pub name: String,
@@ -98,11 +98,19 @@ impl Contest{
         }
     }
 }
-#[derive(Debug, Queryable, Selectable, Insertable)]
+#[derive(Debug, Queryable, Selectable, Insertable, Serialize)]
 pub struct Problem{
-    pub id: String,
-    pub num_tests: i32,
     pub name: String,
+    pub problem_num: i32,
+    pub num_tests: i32,
+    pub contest_id: String,
+}
+
+#[derive(Debug, Queryable, Selectable, Insertable, Serialize, Clone)]
+#[diesel(table_name = problems)]
+pub struct GeneralProblemInfo{
+    pub name: String,
+    pub problem_num: i32,
     pub contest_id: String,
 }
 
@@ -129,11 +137,28 @@ pub struct ContestResponse{
     pub id: String,
     pub name: String,
     pub description: String,
+    pub num_problems: i32,
     pub start_date: NaiveDateTime,
     pub end_date: NaiveDateTime,
-    pub creator_id: i32,
-    pub num_problems: i32,
-    pub problem_names: Vec<String>,
+    pub created_at: Option<NaiveDateTime>,
+    pub updated_at: Option<NaiveDateTime>,
+    pub problems: Vec<GeneralProblemInfo>
+}
+
+impl ContestResponse{
+    pub fn from_contest(contest: Contest, problems: Vec<GeneralProblemInfo>) -> ContestResponse{
+        ContestResponse{
+            id: contest.id,
+            name: contest.name,
+            description: contest.description,
+            num_problems: contest.num_problems,
+            start_date: contest.start_date,
+            end_date: contest.end_date,
+            created_at: contest.created_at,
+            updated_at: contest.updated_at,
+            problems
+        }
+    }
 }
 
 //

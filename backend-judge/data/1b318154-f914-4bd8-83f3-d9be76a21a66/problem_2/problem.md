@@ -1,0 +1,3 @@
+## B
+
+Markov and his friend are incoming. They are going to play a game. The game is simple. There are n boxes in a row. Each box is numbered from 1 to n. Initially, all the boxes are empty. Markov and his friend will take turns to play the game. Markov will play first. In each turn, a player can choose a box and put a coin in it. The player who puts the last coin in the box wins. Markov is a smart guy. He always wants to win. He knows that his friend is also smart. So, he wants to know whether he can win the game or not. Can you help him?

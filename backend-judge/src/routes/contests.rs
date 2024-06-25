@@ -13,6 +13,7 @@ use crate::responses::MessageResponse;
 use rocket::response::status;
 use crate::schema::users::dsl::*;
 use diesel::prelude::*;
+use diesel::query_dsl::InternalJoinDsl;
 use rocket::data::ToByteUnit;
 use rocket::form::Form;
 use rocket::fs::TempFile;
@@ -84,7 +85,7 @@ pub async fn create_contest(formFields: Form<ContestData<'_>>) -> (Status,Result
     for i in 0..contest.num_problems{
         let new_problem_id = Uuid::new_v4().to_string();
         let problem = Problem{
-            id: new_problem_id,
+            problem_num: i+1,
             name: prob_names[i as usize].clone(),
             num_tests: num_tests[i as usize],
             contest_id: new_id.clone()
@@ -171,7 +172,7 @@ pub async fn update_contest(contest_id: String, formFields: Form<ContestData<'_>
     for i in 0..contest.num_problems{
         let new_problem_id = Uuid::new_v4().to_string();
         let problem = Problem{
-            id: new_problem_id,
+            problem_num: i+1,
             name: prob_names[i as usize].clone(),
             num_tests: num_tests[i as usize],
             contest_id: contest_id.clone()
@@ -224,16 +225,19 @@ pub fn get_all_contests() -> Result<Json<Vec<GeneralContestInfo>>, String>{
 }
 
 #[get("/particular/<contest_id>")]
-pub fn get_particular_contest(contest_id: String) -> Result<Json<Contest>, String>{
+pub fn get_particular_contest(contest_id: String) -> Result<Json<ContestResponse>, String>{
     let connection = &mut establish_connection();
-    let results =  crate::schema::contests::table.find(contest_id).get_result::<Contest>(connection);
+    let results =  crate::schema::contests::table.inner_join(crate::schema::problems::table)
+                    .filter(crate::schema::contests::id.eq(contest_id.clone()))
+                    .select((crate::schema::contests::all_columns, GeneralProblemInfo::as_select()))
+                    .load::<(Contest, GeneralProblemInfo)>(connection);
 
     if let Err(e) = results{
         return Err(format!("Error getting contest: {:?}", e));
     }
 
     let data = results.unwrap();
-
-    Ok(Json(data))
+    let res = ContestResponse::from_contest(data[0].0.clone(), data.iter().map(|x| GeneralProblemInfo::from(x.1.clone())).collect());
+    Ok(Json(res))
 
 }
