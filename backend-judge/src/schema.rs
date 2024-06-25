@@ -11,8 +11,8 @@ diesel::table! {
         num_problems -> Int4,
         start_date -> Timestamp,
         end_date -> Timestamp,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
+        created_at -> Nullable<Timestamp>,
+        updated_at -> Nullable<Timestamp>,
         creator_id -> Int4,
     }
 }
@@ -21,6 +21,8 @@ diesel::table! {
     problems (id) {
         #[max_length = 255]
         id -> Varchar,
+        #[max_length = 255]
+        name -> Varchar,
         num_tests -> Int4,
         #[max_length = 255]
         contest_id -> Varchar,

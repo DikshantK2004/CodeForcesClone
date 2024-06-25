@@ -1,12 +1,10 @@
 use std::str::FromStr;
-use chrono::{DateTime, NaiveDateTime, Utc};
-use diesel::dsl::date;
+use chrono::{NaiveDateTime};
 use diesel::prelude::*;
-use diesel::pg::PgConnection;
 use rocket::data::FromData;
 use rocket::serde::{Deserialize, Serialize};
 use crate::schema::{users, problems, contests};
-use rocket::{FromForm, time};
+use rocket::{FromForm};
 use rocket::fs::TempFile;
 use rocket::serde::json::Json;
 
@@ -55,6 +53,7 @@ pub struct ContestRequest{
     pub end_date: String,
     pub creator_id: i32,
     pub num_problems: i32,
+    pub problem_names: Vec<String>,
     pub num_tests: Vec<i32>,
     // add a check that its from particular langauages only
 
@@ -64,6 +63,10 @@ impl ContestRequest{
     pub fn num_tests(&self) -> Vec<i32>{
         self.num_tests.clone()
     }
+
+    pub fn prob_names(&self) -> Vec<String>{
+        self.problem_names.clone()
+    }
 }
 
 #[derive(Debug, Serialize, Queryable, Selectable, Insertable, AsChangeset)]
@@ -71,12 +74,12 @@ pub struct Contest{
     pub id: String,
     pub name: String,
     pub description: String,
+    pub num_problems: i32,
     pub start_date: NaiveDateTime,
     pub end_date: NaiveDateTime,
-    pub creator_id: i32,
-    pub num_problems: i32,
     pub created_at: Option<NaiveDateTime>,
     pub updated_at: Option<NaiveDateTime>,
+    pub creator_id: i32,
 }
 
 
@@ -99,7 +102,18 @@ impl Contest{
 pub struct Problem{
     pub id: String,
     pub num_tests: i32,
+    pub name: String,
     pub contest_id: String,
+}
+
+#[derive(Debug, Serialize, Selectable, Queryable)]
+#[diesel(table_name = contests)]
+pub struct GeneralContestInfo{
+    pub id: String,
+    pub name: String,
+    pub start_date: NaiveDateTime,
+    pub end_date: NaiveDateTime,
+    pub num_problems: i32,
 }
 
 
@@ -119,6 +133,7 @@ pub struct ContestResponse{
     pub end_date: NaiveDateTime,
     pub creator_id: i32,
     pub num_problems: i32,
+    pub problem_names: Vec<String>,
 }
 
 //

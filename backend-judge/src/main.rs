@@ -8,7 +8,7 @@ use crate::routes::users::{create, index, login};
 pub mod models;
 pub mod schema;
 use std::env;
-use crate::routes::contests::{create_contest, update_contest};
+use crate::routes::contests::{create_contest, update_contest, get_all_contests, get_particular_contest};
 
 pub mod responses;
 pub mod auth;
@@ -19,7 +19,7 @@ async fn main() -> shuttle_rocket::ShuttleRocket {
 
 
     let rocket = rocket::build().mount("/", routes![index, create, login])
-        .mount("/contests/", routes![create_contest, update_contest]);
+        .mount("/contests/", routes![create_contest, update_contest, get_all_contests, get_particular_contest]);
 
     Ok(rocket.into())
 }

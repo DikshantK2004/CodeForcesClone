@@ -1,12 +1,10 @@
 use std::collections::HashMap;
-use std::error::Error;
 use std::fs::File;
-use std::io::Read;
 use zip::ZipArchive; // zip 0.5.13
 
 fn build_req_map(probs: &i32, nums_tests: &Vec<i32>) -> HashMap<String, bool>{
     let mut m: HashMap<String, bool> = HashMap::new();
-    let mut problems = false;
+    let problems = false;
     let num_probs = *probs;
     for i  in 1..=num_probs {
         m.insert(format!("problem_{}/", i), false);

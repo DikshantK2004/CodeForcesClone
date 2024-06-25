@@ -12,7 +12,7 @@ pub fn verify_password(password: &str, hash: &str) -> bool {
 
 
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
-use jsonwebtoken::errors::{Error, ErrorKind};
+use jsonwebtoken::errors::{ ErrorKind};
 use rocket::futures::TryFutureExt;
 
 

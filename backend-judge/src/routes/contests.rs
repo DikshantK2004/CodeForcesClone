@@ -18,6 +18,7 @@ use rocket::form::Form;
 use rocket::fs::TempFile;
 use crate::utils::*;
 use uuid::Uuid;
+use crate::models::GeneralContestInfo;
 
 //
 // #[get("/<id>")]
@@ -28,6 +29,7 @@ use uuid::Uuid;
 // }
 
 use crate::contest_utils::*;
+use crate::schema::contests::dsl::contests;
 
 // upload a media zip file which will contain contest files
 #[post("/create", format = "multipart/form-data", data = "<formFields>")]
@@ -37,6 +39,9 @@ pub async fn create_contest(formFields: Form<ContestData<'_>>) -> (Status,Result
     let file_name = form.file.raw_name().unwrap().dangerous_unsafe_unsanitized_raw().as_str();
     let data = form.data.into_inner();
     let new_id = Uuid::new_v4().to_string();
+    if data.problem_names.len() != data.num_problems as usize{
+        return (Status::BadRequest, Err(String::from("Number of problems and problem names do not match")));
+    }
 
     if form.file.content_type().unwrap().extension().unwrap() != "zip" {
         return (Status::BadRequest, Err(String::from("File must be a zip file")));
@@ -65,6 +70,7 @@ pub async fn create_contest(formFields: Form<ContestData<'_>>) -> (Status,Result
     let connection = &mut establish_connection();
 
     let num_tests = data.num_tests();
+    let prob_names = data.prob_names();
     // gives up ownership of data
     let contest = Contest::from_request(new_id.as_str(), data);
 
@@ -79,6 +85,7 @@ pub async fn create_contest(formFields: Form<ContestData<'_>>) -> (Status,Result
         let new_problem_id = Uuid::new_v4().to_string();
         let problem = Problem{
             id: new_problem_id,
+            name: prob_names[i as usize].clone(),
             num_tests: num_tests[i as usize],
             contest_id: new_id.clone()
         };
@@ -115,6 +122,10 @@ pub async fn update_contest(contest_id: String, formFields: Form<ContestData<'_>
     if form.file.content_type().unwrap().extension().unwrap() != "zip" {
         return (Status::BadRequest, Err(String::from("File must be a zip file")));
     }
+
+    if data.problem_names.len() != data.num_problems as usize{
+        return (Status::BadRequest, Err(String::from("Number of problems and problem names do not match")));
+    }
     // Generate new UUID
     let save_file_name = contest_id.as_str();
     let file_path = String::from("./media/") + save_file_name + ".zip";
@@ -131,9 +142,11 @@ pub async fn update_contest(contest_id: String, formFields: Form<ContestData<'_>
         return (Status::BadRequest, Err(e));
     }
 
+
     // update the contest data in db
     let connection = &mut establish_connection();
     let num_tests = data.num_tests();
+    let prob_names = data.prob_names();
 
     let contest = Contest::from_request(contest_id.as_str(), data);
     let update_status = diesel::update(crate::schema::contests::table.find(contest_id.clone()))
@@ -159,6 +172,7 @@ pub async fn update_contest(contest_id: String, formFields: Form<ContestData<'_>
         let new_problem_id = Uuid::new_v4().to_string();
         let problem = Problem{
             id: new_problem_id,
+            name: prob_names[i as usize].clone(),
             num_tests: num_tests[i as usize],
             contest_id: contest_id.clone()
         };
@@ -192,4 +206,34 @@ pub async fn update_contest(contest_id: String, formFields: Form<ContestData<'_>
 
 }
 
-#[get("/contests/")]
+#[get("/all")]
+pub fn get_all_contests() -> Result<Json<Vec<GeneralContestInfo>>, String>{
+    let connection = &mut establish_connection();
+    let results =  crate::schema::contests::table.select(GeneralContestInfo::as_select()).load
+    :: <GeneralContestInfo>(connection);
+
+    if let Err(e) = results{
+        return Err(format!("Error getting contests: {:?}", e));
+    }
+
+    let data = results.unwrap();
+
+
+    Ok(Json(data))
+
+}
+
+#[get("/particular/<contest_id>")]
+pub fn get_particular_contest(contest_id: String) -> Result<Json<Contest>, String>{
+    let connection = &mut establish_connection();
+    let results =  crate::schema::contests::table.find(contest_id).get_result::<Contest>(connection);
+
+    if let Err(e) = results{
+        return Err(format!("Error getting contest: {:?}", e));
+    }
+
+    let data = results.unwrap();
+
+    Ok(Json(data))
+
+}
