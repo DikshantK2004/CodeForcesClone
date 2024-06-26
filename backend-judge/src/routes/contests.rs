@@ -9,7 +9,7 @@ use rocket::http::Status;
 use rocket::serde::json::Json;
 use diesel::result;
 use diesel::result::{DatabaseErrorKind, Error};
-use crate::responses::MessageResponse;
+use crate::responses::{GeneralProblemInfo, MessageResponse};
 use rocket::response::status;
 use crate::schema::users::dsl::*;
 use diesel::prelude::*;
@@ -44,6 +44,7 @@ pub async fn create_contest(formFields: Form<ContestData<'_>>) -> (Status,Result
         return (Status::BadRequest, Err(String::from("Number of problems and problem names do not match")));
     }
 
+
     if form.file.content_type().unwrap().extension().unwrap() != "zip" {
         return (Status::BadRequest, Err(String::from("File must be a zip file")));
     }
@@ -51,16 +52,13 @@ pub async fn create_contest(formFields: Form<ContestData<'_>>) -> (Status,Result
     let save_file_name = new_id.as_str();
     let file_path = String::from("./media/")  + save_file_name + ".zip";
 
-
-
-
     // Save file
     let som_file = form.file.persist_to(&file_path).await;
     if let Err(e) = som_file {
         return (Status::InternalServerError, Err(format!("Error: {:?}", e)));
     }
 
-    let pass_status = checker(file_path.as_str(), &data.num_problems, &data.num_tests);
+    let pass_status = checker(file_path.as_str(), &data.num_problems, &data.num_tests, &data.num_samples);
 
     if let Err(e) = pass_status{
         return (Status::BadRequest, Err(e));
@@ -72,6 +70,7 @@ pub async fn create_contest(formFields: Form<ContestData<'_>>) -> (Status,Result
 
     let num_tests = data.num_tests();
     let prob_names = data.prob_names();
+    let num_samples = data.num_samples();
     // gives up ownership of data
     let contest = Contest::from_request(new_id.as_str(), data);
 
@@ -81,21 +80,8 @@ pub async fn create_contest(formFields: Form<ContestData<'_>>) -> (Status,Result
         .expect("Error saving contest");
 
     // save the problems in the db
+    insert_problems_to_db(contest.num_problems, prob_names, num_tests, num_samples, new_id.clone(), connection);
 
-    for i in 0..contest.num_problems{
-        let new_problem_id = Uuid::new_v4().to_string();
-        let problem = Problem{
-            problem_num: i+1,
-            name: prob_names[i as usize].clone(),
-            num_tests: num_tests[i as usize],
-            contest_id: new_id.clone()
-        };
-
-        diesel::insert_into(crate::schema::problems::table)
-            .values(&problem)
-            .execute(connection)
-            .expect("Error saving problem");
-    }
     // unzip the archive in ./data/save_file_name using cli commands
     let unzip_status = extract_zip(file_path.as_str(), save_file_name);
 
@@ -138,16 +124,18 @@ pub async fn update_contest(contest_id: String, formFields: Form<ContestData<'_>
     }
 
     // checking if new zip follows the correct format
-    let pass_status = checker(file_path.as_str(), &data.num_problems, &data.num_tests);
+    let pass_status = checker(file_path.as_str(), &data.num_problems, &data.num_tests, &data.num_samples);
     if let Err(e) = pass_status{
         return (Status::BadRequest, Err(e));
     }
 
 
     // update the contest data in db
-    let connection = &mut establish_connection();
+    let connection = & mut establish_connection();
     let num_tests = data.num_tests();
     let prob_names = data.prob_names();
+    let num_samples = data.num_samples();
+
 
     let contest = Contest::from_request(contest_id.as_str(), data);
     let update_status = diesel::update(crate::schema::contests::table.find(contest_id.clone()))
@@ -169,20 +157,7 @@ pub async fn update_contest(contest_id: String, formFields: Form<ContestData<'_>
     }
 
     // save the problems in the db
-    for i in 0..contest.num_problems{
-        let new_problem_id = Uuid::new_v4().to_string();
-        let problem = Problem{
-            problem_num: i+1,
-            name: prob_names[i as usize].clone(),
-            num_tests: num_tests[i as usize],
-            contest_id: contest_id.clone()
-        };
-
-        diesel::insert_into(crate::schema::problems::table)
-            .values(&problem)
-            .execute(connection)
-            .expect("Error saving problem");
-    }
+    insert_problems_to_db(contest.num_problems, prob_names, num_tests, num_samples, contest_id.clone(), connection);
 
 
     // remove the existing files
@@ -237,7 +212,12 @@ pub fn get_particular_contest(contest_id: String) -> Result<Json<ContestResponse
     }
 
     let data = results.unwrap();
-    let res = ContestResponse::from_contest(data[0].0.clone(), data.iter().map(|x| GeneralProblemInfo::from(x.1.clone())).collect());
-    Ok(Json(res))
 
+    if data.len() == 0{
+        return Err(String::from("No such contest found"));
+    }
+
+    let res = ContestResponse::from_contest(data[0].0.clone(), data.iter().map(|x| GeneralProblemInfo::from(x.1.clone())).collect());
+
+    Ok(Json(res))
 }

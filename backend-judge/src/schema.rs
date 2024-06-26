@@ -18,13 +18,26 @@ diesel::table! {
 }
 
 diesel::table! {
-    problems (contest_id, problem_num) {
+    problems (id) {
+        id -> Int4,
         #[max_length = 255]
         name -> Varchar,
         problem_num -> Int4,
         num_tests -> Int4,
+        num_samples -> Int4,
         #[max_length = 255]
         contest_id -> Varchar,
+    }
+}
+
+diesel::table! {
+    submissions (id) {
+        id -> Int4,
+        user_id -> Int4,
+        problem_id -> Int4,
+        created_at -> Nullable<Timestamp>,
+        #[max_length = 255]
+        verdict -> Varchar,
     }
 }
 
@@ -43,9 +56,12 @@ diesel::table! {
 
 diesel::joinable!(contests -> users (creator_id));
 diesel::joinable!(problems -> contests (contest_id));
+diesel::joinable!(submissions -> problems (problem_id));
+diesel::joinable!(submissions -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     contests,
     problems,
+    submissions,
     users,
 );

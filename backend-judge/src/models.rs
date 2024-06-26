@@ -7,6 +7,7 @@ use crate::schema::{users, problems, contests};
 use rocket::{FromForm};
 use rocket::fs::TempFile;
 use rocket::serde::json::Json;
+use crate::responses::GeneralProblemInfo;
 
 // This struct represents a row in the `users` table
 #[derive(Queryable,Debug, Serialize, Deserialize, Selectable)]
@@ -55,6 +56,7 @@ pub struct ContestRequest{
     pub num_problems: i32,
     pub problem_names: Vec<String>,
     pub num_tests: Vec<i32>,
+    pub num_samples: Vec<i32>
     // add a check that its from particular langauages only
 
     // pub solution_ext: String,
@@ -62,6 +64,10 @@ pub struct ContestRequest{
 impl ContestRequest{
     pub fn num_tests(&self) -> Vec<i32>{
         self.num_tests.clone()
+    }
+
+    pub fn num_samples(&self) -> Vec<i32>{
+        self.num_samples.clone()
     }
 
     pub fn prob_names(&self) -> Vec<String>{
@@ -103,16 +109,11 @@ pub struct Problem{
     pub name: String,
     pub problem_num: i32,
     pub num_tests: i32,
+    pub num_samples: i32,
     pub contest_id: String,
 }
 
-#[derive(Debug, Queryable, Selectable, Insertable, Serialize, Clone)]
-#[diesel(table_name = problems)]
-pub struct GeneralProblemInfo{
-    pub name: String,
-    pub problem_num: i32,
-    pub contest_id: String,
-}
+
 
 #[derive(Debug, Serialize, Selectable, Queryable)]
 #[diesel(table_name = contests)]
@@ -159,6 +160,12 @@ impl ContestResponse{
             problems
         }
     }
+}
+
+#[derive(Debug, Serialize)]
+pub struct SampleTestCase{
+    pub input: String,
+    pub output: String
 }
 
 //

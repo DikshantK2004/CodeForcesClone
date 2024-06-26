@@ -3,7 +3,12 @@ use rocket::{get, routes};
 
 pub mod database;
 pub mod utils;
-mod routes{pub mod users; pub mod contests; pub mod problems;}
+mod routes{
+    pub mod users;
+    pub mod contests;
+    pub mod problems;
+    pub mod submissions;
+}
 use crate::routes::users::{create, index, login};
 pub mod models;
 pub mod schema;
