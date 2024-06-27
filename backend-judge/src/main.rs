@@ -12,6 +12,7 @@ mod routes{
 
 pub mod submission_utils;
 use crate::routes::users::{create, index, login};
+use crate::routes::submissions::*;
 pub mod models;
 pub mod schema;
 use std::env;
@@ -24,11 +25,10 @@ pub mod contest_utils;
 
 #[shuttle_runtime::main]
 async fn main() -> shuttle_rocket::ShuttleRocket {
-
-
     let rocket = rocket::build().mount("/", routes![index, create, login])
         .mount("/contests/", routes![create_contest, update_contest, get_all_contests, get_particular_contest])
-        .mount("/problems/", routes![get_all_problems, get_particular_problem]);
+        .mount("/problems/", routes![get_all_problems, get_particular_problem])
+        .mount("/submit", routes![submit]);
 
     Ok(rocket.into())
 }

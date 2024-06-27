@@ -3,7 +3,7 @@ use chrono::{NaiveDateTime};
 use diesel::prelude::*;
 use rocket::data::FromData;
 use rocket::serde::{Deserialize, Serialize};
-use crate::schema::{users, problems, contests, submissions};
+use crate::schema::{users, problems, contests, submissions, test_results};
 use rocket::{FromForm};
 use rocket::fs::TempFile;
 use rocket::serde::json::Json;
@@ -169,7 +169,7 @@ pub struct SampleTestCase{
 }
 
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize, Insertable)]
 #[diesel(table_name = submissions)]
 pub struct NewSubmission{
     pub code: String,
@@ -178,7 +178,7 @@ pub struct NewSubmission{
     pub problem_id: i32,
 }
 
-#[derive(Debug, Serialize, Queryable, Insertable)]
+#[derive(Debug, Serialize, Queryable, Identifiable, Insertable)]
 pub struct Submission{
     pub id: i32,
     pub code: String,

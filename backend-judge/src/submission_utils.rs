@@ -5,6 +5,7 @@ use diesel::{QueryDsl, RunQueryDsl};
 use crate::database::establish_connection;
 use crate::models::{NewSubmission, NewTestResult, Submission};
 use crate::schema::{submissions, test_results};
+use diesel::expression_methods::ExpressionMethods; // IMPORANT: for eq
 
 
 enum Verdicts{
@@ -57,20 +58,39 @@ fn get_command_to_run(file_name: &str, extension: &str) -> Result<String, String
 
 
 fn run_file(file_name: &str, extension: &str, test_file: &str, test_num: i32) -> Result<(String, String), String>{
-    let input_file = File::open(test_file)?;
+    let input_file = match File::open(test_file) {
+        Ok(file) => file,
+        Err(e) => return Err(e.to_string()),
+    };
+
     let mut expected_output = String::new();
-    let mut file = File::open(file_name)?;
+    let mut file = match File::open(test_file) {
+        Ok(file) => file,
+        Err(e) => return Err(e.to_string()),
+    };
     let command = get_command_to_run(file_name, extension)?;
 
-    let output = Command::new(command)
+    let output = match Command::new(command)
         .stdin(input_file)
-        .output()?;
+        .output() {
+        Ok(output) => output,
+        Err(e) => return Err(e.to_string()),  // Convert the std::io::Error into a String
+    };
+
     let code_without_ext = file_name.replace(&format!(".{}", &extension), "");
 
     let user_output = String::from_utf8_lossy(&output.stdout).to_string();
     let output_path = format!("./media/{}_{}.txt", code_without_ext, test_num );
-    let mut output_file = std::fs::File::create(output_path.as_str())?;
-    output_file.write_all(user_output.as_bytes())?;
+    let mut output_file = match File::create(output_path.as_str()) {
+        Ok(file) => file,
+        Err(e) => return Err(e.to_string()), // Convert the error to a String
+    };
+
+
+    // Attempt to write to the file
+    if let Err(e) = output_file.write_all(user_output.as_bytes()) {
+        return Err(e.to_string());
+    };
     Ok((user_output, output_path))
 }
 
@@ -101,7 +121,7 @@ fn store_results_to_db(submission: &Submission, outputs: Vec<String>, verdicts: 
         .zip(verdicts.iter())
         .enumerate()
         .map(|(i , (out, verdict))| NewTestResult {
-            submission_id,
+            submission_id: submission.id,
             test_num: i as i32 + 1,
             out: out.clone(),
             verdict: verdict.clone(),
@@ -109,21 +129,27 @@ fn store_results_to_db(submission: &Submission, outputs: Vec<String>, verdicts: 
         .collect();
 
     // Insert all the test results in one query
-    diesel::insert_into(test_results::table)
+    let mut res  = diesel::insert_into(test_results::table)
         .values(&new_test_results)
-        .execute(connection)?;
-
+        .execute(connection);
+    if let Err(e) = res{
+        return Err(e.to_string());
+    }
     // updating the submission with new verdict
     let final_verdict = if len == num_tests && verdicts.iter().all(|verdict| verdict == "YES") {
         "Accepted"
     }
     else {
-        verdicts[len -1].as_str()
+        verdicts[len as usize -1].as_str()
     };
 
-    diesel::update(submissions::table.find(submission.id))
-        .set(submissions::verdict.eq(final_verdict))
-        .execute(connection)?;
+    res = diesel::update(submission)
+        .set(submissions::dsl::verdict.eq(final_verdict))
+        .execute(connection);
+
+    if let Err(e) = res{
+        return Err(e.to_string());
+    }
 
     Ok(())
 }
@@ -134,16 +160,20 @@ fn validate(submission: &Submission, contest_id: &str, problem_num: i32, num_tes
     let execute_validator_command = format!("./data/{}/problem_{}/validator.out", contest_id, problem_num);
     let input_file_name = save_code_file(&submission.code, &submission.extension, submission.id)?;
 
-    let results = Vec::new();
     let mut outputs = Vec::new();
     let mut verdicts = Vec::new();
     for i in 1..=num_tests{
-        let test_file = format!("./data/{}/problem_{}/testcases/input_{}.txt", contest_id, problem_num, i);
-        let( user_output,output_path) = run_file(&input_file_name, &submission.extension, &test_file, i)?;
+        let test_file_path = format!("./data/{}/problem_{}/testcases/input_{}.txt", contest_id, problem_num, i);
+        let test_file = match std::fs::File::open(test_file_path.as_str()) {
+            Ok(file) => file,
+            Err(e) => return Err(e.to_string()),
+        };
+
+        let( user_output,output_path) = run_file(&input_file_name, &submission.extension, &test_file_path, i)?;
 
         let mut child = Command::new(execute_validator_command.clone())
             .args(&[output_path.as_str()])
-            .stdin(test_file.as_str())
+            .stdin(test_file)
             .output();
         outputs.push(user_output);
         let mut validator_out = match child{
@@ -155,7 +185,7 @@ fn validate(submission: &Submission, contest_id: &str, problem_num: i32, num_tes
             }
         };
 
-        verdicts.push(validator_out);
+        verdicts.push(validator_out.clone());
         if validator_out != "YES"{
             break;
         }

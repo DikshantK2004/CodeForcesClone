@@ -39,7 +39,7 @@ diesel::table! {
         extension -> Varchar,
         user_id -> Int4,
         problem_id -> Int4,
-        created_at -> Nullable<Timestamp>,
+        created_at -> Timestamp,
         #[max_length = 255]
         verdict -> Varchar,
     }
