@@ -9,6 +9,8 @@ mod routes{
     pub mod problems;
     pub mod submissions;
 }
+
+pub mod submission_utils;
 use crate::routes::users::{create, index, login};
 pub mod models;
 pub mod schema;

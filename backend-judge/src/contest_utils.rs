@@ -13,7 +13,7 @@ fn build_req_map(probs: &i32, nums_tests: &Vec<i32>, nums_samples: &Vec<i32>) ->
     for i  in 1..=num_probs {
         m.insert(format!("problem_{}/", i), false);
         m.insert(format!("problem_{}/problem.md", i), false);
-        m.insert(format!("problem_{}/solution.c",i), false);
+        m.insert(format!("problem_{}/solution.cpp",i), false);
         m.insert(format!("problem_{}/testcases/",i), false);
         m.insert(format!("problem_{}/samples/",i), false);
         let mut x = nums_tests[(i - 1) as usize];
@@ -161,3 +161,23 @@ pub fn gather_samples(contest_id: &str, problem_num: i32, num_samples: i32) -> R
 
     Ok(samples)
 }
+
+
+pub fn compile_validators(contest_id: &str, num_problems: i32) -> Result<(), String> {
+    for i in 1..=num_problems {
+        let validator_file_path = Path::new("./data/").join(contest_id).join(format!("problem_{}/solution.cpp", i));
+        let output_file_path = Path::new("./data/").join(contest_id).join(format!("problem_{}/validator.out", i));
+
+        let compile_command = format!("g++ {} -o {}", validator_file_path.to_str().unwrap(), output_file_path.to_str().unwrap());
+        let output = std::process::Command::new("sh")
+            .arg("-c")
+            .arg(compile_command)
+            .output();
+        if !output.unwrap().status.success() {
+            return Err("Error compiling validator".to_string());
+        }
+    }
+
+    Ok(())
+}
+

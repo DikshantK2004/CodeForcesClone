@@ -33,10 +33,26 @@ diesel::table! {
 diesel::table! {
     submissions (id) {
         id -> Int4,
+        #[max_length = 6000]
+        code -> Varchar,
+        #[max_length = 20]
+        extension -> Varchar,
         user_id -> Int4,
         problem_id -> Int4,
         created_at -> Nullable<Timestamp>,
         #[max_length = 255]
+        verdict -> Varchar,
+    }
+}
+
+diesel::table! {
+    test_results (id) {
+        id -> Int4,
+        submission_id -> Int4,
+        test_num -> Int4,
+        #[max_length = 1500]
+        out -> Varchar,
+        #[max_length = 40]
         verdict -> Varchar,
     }
 }
@@ -63,5 +79,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     contests,
     problems,
     submissions,
+    test_results,
     users,
 );

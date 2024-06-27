@@ -64,6 +64,7 @@ pub async fn create_contest(formFields: Form<ContestData<'_>>) -> (Status,Result
         return (Status::BadRequest, Err(e));
     }
 
+    compile_validators(new_id.as_str(), data.num_problems)?;
 
     // save the contest in the database
     let connection = &mut establish_connection();
@@ -128,6 +129,9 @@ pub async fn update_contest(contest_id: String, formFields: Form<ContestData<'_>
     if let Err(e) = pass_status{
         return (Status::BadRequest, Err(e));
     }
+
+    compile_validators(contest_id.as_str(), data.num_problems)?;
+
 
 
     // update the contest data in db
