@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
     }
 
     string n, k,r;
-    cin >> n >> k >> r;
+    cin >> n >> k ;
 
     string output_path = argv[1];  // Directly use argv[1], no need to convert from char array
 
@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
     }
 
     string no, ko, r0;
-    output_file >> no >> ko >> r0;
+    output_file >> no >> ko ;
 
     if (output_file.fail()) {  // Check if reading from file failed
         cerr << "Failed to read from file: " << output_path ;

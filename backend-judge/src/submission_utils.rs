@@ -226,9 +226,9 @@ fn validate(submission: &Submission, contest_id: &str, problem_num: i32, num_tes
     Ok(())
 }
 
-pub fn run_tests(submission: &Submission, contest_id: &str, problem_num: i32, num_tests: i32) -> (){
+pub fn run_tests(submission: Submission, contest_id: String, problem_num: i32, num_tests: i32) -> (){
 
-    validate(submission, contest_id, problem_num, num_tests).unwrap_or_else(|e|{
+    validate(&submission, &*contest_id, problem_num, num_tests).unwrap_or_else(|e|{
         println!("Error validating submission: {:?}", e);
     });
 }

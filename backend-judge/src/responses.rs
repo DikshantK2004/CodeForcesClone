@@ -1,8 +1,9 @@
+use chrono::NaiveDateTime;
 use diesel::{Insertable, Queryable, Selectable};
 use rocket::Responder;
 use rocket::serde::Serialize;
 use crate::models::SampleTestCase;
-use crate::schema::problems;
+use crate::schema::*;
 #[derive(Debug, Serialize, Responder)]
 pub struct MessageResponse {
     pub message: String,
@@ -24,4 +25,13 @@ pub struct GeneralProblemInfo{
     pub problem_num: i32,
     pub contest_id: String,
     pub num_samples: i32,
+}
+
+#[derive(Debug, Queryable, Serialize, Clone)]
+pub struct GeneralSubmissionInfo{
+    pub id: i32,
+    pub problem_id: i32,
+    pub problem_name: String,
+    pub created_at: NaiveDateTime,
+    pub verdict: String
 }
