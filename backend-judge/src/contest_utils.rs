@@ -173,8 +173,15 @@ pub fn compile_validators(contest_id: &str, num_problems: i32) -> Result<(), Str
             .arg("-c")
             .arg(compile_command)
             .output();
-        if !output.unwrap().status.success() {
-            return Err("Error compiling validator".to_string());
+        match output {
+            Ok(output) => {
+                if !output.status.success() {
+                    return Err(format!("Error compiling validator for problem {}", i));
+                }
+            }
+            Err(e) => {
+                return Err(String::from("Error compiling validator"));
+            }
         }
     }
 

@@ -4,4 +4,4 @@ Secrets*.toml
 .env
 /media/*
 ../tests/
-/data
+./data/**/**/**

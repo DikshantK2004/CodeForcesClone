@@ -64,6 +64,15 @@ pub async fn create_contest(formFields: Form<ContestData<'_>>) -> (Status,Result
         return (Status::BadRequest, Err(e));
     }
 
+
+    // unzip the archive in ./data/save_file_name using cli commands
+    let unzip_status = extract_zip(file_path.as_str(), save_file_name);
+
+    if let Err(e) = unzip_status{
+        return (Status::InternalServerError, Err(e));
+    }
+
+
     match compile_validators(new_id.as_str(), data.num_problems){
         Err(e) => return (Status::InternalServerError, Err(e)),
         _ => {}
@@ -86,12 +95,7 @@ pub async fn create_contest(formFields: Form<ContestData<'_>>) -> (Status,Result
     // save the problems in the db
     insert_problems_to_db(contest.num_problems, prob_names, num_tests, num_samples, new_id.clone(), connection);
 
-    // unzip the archive in ./data/save_file_name using cli commands
-    let unzip_status = extract_zip(file_path.as_str(), save_file_name);
 
-    if let Err(e) = unzip_status{
-        return (Status::InternalServerError, Err(e));
-    }
 
     let remove_zip_status = remove_zip(file_path.as_str());
     if let Err(e) = remove_zip_status{
@@ -133,6 +137,19 @@ pub async fn update_contest(contest_id: String, formFields: Form<ContestData<'_>
         return (Status::BadRequest, Err(e));
     }
 
+    // remove the existing files
+    let remove_status = remove_existing_contest(contest_id.as_str());
+    if let Err(e) = remove_status{
+        return (Status::InternalServerError, Err(e));
+    }
+
+    // unzip the archive in ./data/save_file_name using cli commands
+    let unzip_status = extract_zip(file_path.as_str(), save_file_name);
+    if let Err(e) = unzip_status{
+        println!("Error unzipping file: {:?}", e);
+        return (Status::InternalServerError, Err(e));
+    }
+
     match compile_validators(contest_id.as_str(), data.num_problems){
         Err(e) => return (Status::InternalServerError, Err(e)),
         _ => {}
@@ -170,17 +187,6 @@ pub async fn update_contest(contest_id: String, formFields: Form<ContestData<'_>
     insert_problems_to_db(contest.num_problems, prob_names, num_tests, num_samples, contest_id.clone(), connection);
 
 
-    // remove the existing files
-    let remove_status = remove_existing_contest(contest_id.as_str());
-    if let Err(e) = remove_status{
-        return (Status::InternalServerError, Err(e));
-    }
-
-    // unzip the archive in ./data/save_file_name using cli commands
-    let unzip_status = extract_zip(file_path.as_str(), save_file_name);
-    if let Err(e) = unzip_status{
-        return (Status::InternalServerError, Err(e));
-    }
 
     let remove_zip_status = remove_zip(file_path.as_str());
 
