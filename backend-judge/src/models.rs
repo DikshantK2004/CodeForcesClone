@@ -56,7 +56,8 @@ pub struct ContestRequest{
     pub num_problems: i32,
     pub problem_names: Vec<String>,
     pub num_tests: Vec<i32>,
-    pub num_samples: Vec<i32>
+    pub num_samples: Vec<i32>,
+    pub time_limits: Vec<i32>,
     // add a check that its from particular langauages only
 
     // pub solution_ext: String,
@@ -72,6 +73,10 @@ impl ContestRequest{
 
     pub fn prob_names(&self) -> Vec<String>{
         self.problem_names.clone()
+    }
+
+    pub fn time_limits(&self) -> Vec<i32>{
+        self.time_limits.clone()
     }
 }
 
@@ -111,6 +116,7 @@ pub struct Problem{
     pub num_tests: i32,
     pub num_samples: i32,
     pub contest_id: String,
+    pub time_limit: i32,
 }
 
 

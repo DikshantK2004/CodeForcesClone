@@ -58,7 +58,7 @@ pub async fn create_contest(formFields: Form<ContestData<'_>>) -> (Status,Result
         return (Status::InternalServerError, Err(format!("Error: {:?}", e)));
     }
 
-    let pass_status = checker(file_path.as_str(), &data.num_problems, &data.num_tests, &data.num_samples);
+    let pass_status = checker(file_path.as_str(), &data.num_problems, &data.num_tests, &data.num_samples, &data.time_limits);
 
     if let Err(e) = pass_status{
         return (Status::BadRequest, Err(e));
@@ -84,6 +84,7 @@ pub async fn create_contest(formFields: Form<ContestData<'_>>) -> (Status,Result
     let num_tests = data.num_tests();
     let prob_names = data.prob_names();
     let num_samples = data.num_samples();
+    let time_limits = data.time_limits();
     // gives up ownership of data
     let contest = Contest::from_request(new_id.as_str(), data);
 
@@ -93,7 +94,7 @@ pub async fn create_contest(formFields: Form<ContestData<'_>>) -> (Status,Result
         .expect("Error saving contest");
 
     // save the problems in the db
-    insert_problems_to_db(contest.num_problems, prob_names, num_tests, num_samples, new_id.clone(), connection);
+    insert_problems_to_db(contest.num_problems,time_limits ,prob_names, num_tests, num_samples, new_id.clone(), connection);
 
 
 
@@ -132,7 +133,7 @@ pub async fn update_contest(contest_id: String, formFields: Form<ContestData<'_>
     }
 
     // checking if new zip follows the correct format
-    let pass_status = checker(file_path.as_str(), &data.num_problems, &data.num_tests, &data.num_samples);
+    let pass_status = checker(file_path.as_str(), &data.num_problems, &data.num_tests, &data.num_samples, &data.time_limits);
     if let Err(e) = pass_status{
         return (Status::BadRequest, Err(e));
     }
@@ -162,7 +163,7 @@ pub async fn update_contest(contest_id: String, formFields: Form<ContestData<'_>
     let num_tests = data.num_tests();
     let prob_names = data.prob_names();
     let num_samples = data.num_samples();
-
+    let time_limits = data.time_limits();
 
     let contest = Contest::from_request(contest_id.as_str(), data);
     let update_status = diesel::update(crate::schema::contests::table.find(contest_id.clone()))
@@ -184,7 +185,7 @@ pub async fn update_contest(contest_id: String, formFields: Form<ContestData<'_>
     }
 
     // save the problems in the db
-    insert_problems_to_db(contest.num_problems, prob_names, num_tests, num_samples, contest_id.clone(), connection);
+    insert_problems_to_db(contest.num_problems, time_limits,prob_names, num_tests, num_samples, contest_id.clone(), connection);
 
 
 

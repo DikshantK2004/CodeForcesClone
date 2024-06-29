@@ -5,7 +5,7 @@ use std::sync::mpsc;
 use std::time::Instant;
 use diesel::{QueryDsl, RunQueryDsl};
 use crate::database::establish_connection;
-use crate::models::{NewSubmission, NewTestResult, Submission};
+use crate::models::{NewSubmission, NewTestResult, Problem, Submission};
 use crate::schema::{submissions, test_results};
 use diesel::expression_methods::ExpressionMethods; // IMPORANT: for eq
 
@@ -101,7 +101,7 @@ fn get_command_to_run(file_name: &str, extension: &str) -> Result<String, String
 }
 
 
-fn run_file(file_name: &str, extension: &str, test_file: &str, test_num: i32) -> Result<TypeOnRun, String>{
+fn run_file(file_name: &str, extension: &str, test_file: &str, test_num: i32, time_limit: i32) -> Result<TypeOnRun, String>{
     println!("Test file: {}", test_file);
     let input_file = match File::open(test_file) {
         Ok(file) => file,
@@ -111,7 +111,7 @@ fn run_file(file_name: &str, extension: &str, test_file: &str, test_num: i32) ->
     let command = get_command_to_run(file_name, extension)?;
     println!("{}", command);
 
-    let output = run_command_with_timeout(command.as_str(), input_file, 100);
+    let output = run_command_with_timeout(command.as_str(), input_file, time_limit);
     let (time, user_output, stderr) = match output{
         Ok(output) => match output {
             CommandTime::In(time, user_output, stderr) => (time, user_output, stderr),
@@ -216,7 +216,7 @@ fn store_results_to_db(submission: &Submission, outputs: Vec<String>, verdicts: 
 }
 
 // TODO add parallelism with threads
-fn validate(submission: &Submission, contest_id: &str, problem_num: i32, num_tests: i32) -> Result<(), String>{
+fn validate(submission: &Submission, contest_id: &str, problem_num: i32, num_tests: i32, time_limit:i32) -> Result<(), String>{
 
     let execute_validator_command = format!("./data/{}/problem_{}/validator.out ", contest_id, problem_num);
     let input_file_name = save_code_file(&submission.code, &submission.extension, submission.id)?;
@@ -230,7 +230,7 @@ fn validate(submission: &Submission, contest_id: &str, problem_num: i32, num_tes
         println!("Test file path: {}", test_file_path);
 
         // running the file
-        let( time,user_output,output_path)  : (i32,String, String) = match run_file(&input_file_name, &submission.extension, &test_file_path, i)?{
+        let( time,user_output,output_path)  : (i32,String, String) = match run_file(&input_file_name, &submission.extension, &test_file_path, i, time_limit)?{
             TypeOnRun::Err(e) => {
                 verdicts.push(format!("Error on test {}", i));
                 outputs.push(e);
@@ -280,9 +280,12 @@ fn validate(submission: &Submission, contest_id: &str, problem_num: i32, num_tes
     Ok(())
 }
 
-pub fn run_tests(submission: Submission, contest_id: String, problem_num: i32, num_tests: i32) -> (){
-
-    validate(&submission, &*contest_id, problem_num, num_tests).unwrap_or_else(|e|{
+pub fn run_tests(submission: Submission, problem: Problem) -> (){
+    let contest_id = problem.contest_id;
+    let problem_num = problem.problem_num;
+    let num_tests = problem.num_tests;
+    let time_limit = problem.time_limit;
+    validate(&submission, &*contest_id, problem_num, num_tests, time_limit).unwrap_or_else(|e|{
         println!("Error validating submission: {:?}", e);
     });
 }

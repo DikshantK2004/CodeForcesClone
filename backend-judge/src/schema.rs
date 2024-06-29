@@ -27,6 +27,7 @@ diesel::table! {
         num_samples -> Int4,
         #[max_length = 255]
         contest_id -> Varchar,
+        time_limit -> Int4,
     }
 }
 

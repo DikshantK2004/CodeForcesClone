@@ -41,7 +41,7 @@ pub fn submit(sub: Json<NewSubmission>) -> (Status, Result<String, String>){
     let submission = sub_res.unwrap();
     let id = submission.id;
     // start the function validate on a new thread and continue beyond this point to response
-    thread::spawn(move || run_tests(submission, problem.contest_id, problem.problem_num, problem.num_tests));
+    thread::spawn(move || run_tests(submission, problem));
 
     (Status:: Ok,Ok(format!("{}",id)))
 }
@@ -62,7 +62,8 @@ pub fn general_submission_handler(id: String) -> Result<Json<GeneralSubmissionIn
             submission_columns::problem_id,
             problem_columns::name,
             submission_columns::created_at,
-            submission_columns::verdict
+            submission_columns::verdict,
+            submission_columns::time_taken
         ))
         .filter(submission_columns::id.eq(submission_id))
         .first::<GeneralSubmissionInfo>(connection);
@@ -88,7 +89,8 @@ pub fn user_submissions(id: String) -> Result<Json<Vec<GeneralSubmissionInfo>>, 
             submission_columns::problem_id,
             problem_columns::name,
             submission_columns::created_at,
-            submission_columns::verdict
+            submission_columns::verdict,
+            submission_columns::time_taken
         ))
         .filter(submission_columns::user_id.eq(user_id))
         .load::<GeneralSubmissionInfo>(connection);

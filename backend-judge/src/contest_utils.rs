@@ -35,9 +35,18 @@ fn build_req_map(probs: &i32, nums_tests: &Vec<i32>, nums_samples: &Vec<i32>) ->
 }
 
 
-pub fn checker(name: &str, num_probs: &i32, nums_tests: &Vec<i32>, nums_samples: &Vec<i32>) -> Result<(), String>{
+pub fn checker(name: &str, num_probs: &i32, nums_tests: &Vec<i32>, nums_samples: &Vec<i32>, time_limits: &Vec<i32>) -> Result<(), String>{
 
     // check for a folder named problems at top level
+    if time_limits.len() != *num_probs as usize{
+        return Err("Time limits do not match number of problems".to_string());
+    }
+
+    for i in time_limits{
+        if *i < 1 || *i > 5000{
+            return Err("Time limits must be between 1 and 5000 ms".to_string());
+        }
+    }
 
     let mut m = build_req_map(num_probs, nums_tests, nums_samples);
 
@@ -119,7 +128,7 @@ pub fn remove_existing_contest(contest_id: &str) -> Result<(), String>{
     Ok(())
 }
 
-pub fn insert_problems_to_db(num_problems: i32, prob_names: Vec<String>, num_tests: Vec<i32>, num_samples: Vec<i32>, contest_id: String, connection: &mut PgConnection){
+pub fn insert_problems_to_db(num_problems: i32, time_limits: Vec<i32> ,prob_names: Vec<String>, num_tests: Vec<i32>, num_samples: Vec<i32>, contest_id: String, connection: &mut PgConnection){
     for i in 0..num_problems{
         let new_problem_id = Uuid::new_v4().to_string();
         let problem = Problem{
@@ -127,7 +136,8 @@ pub fn insert_problems_to_db(num_problems: i32, prob_names: Vec<String>, num_tes
             name: prob_names[i as usize].clone(),
             num_tests: num_tests[i as usize],
             contest_id: contest_id.clone(),
-            num_samples: num_samples[i as usize]
+            num_samples: num_samples[i as usize],
+            time_limit: time_limits[i as usize],
         };
 
         diesel::insert_into(crate::schema::problems::table)

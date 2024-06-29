@@ -25,6 +25,7 @@ pub struct GeneralProblemInfo{
     pub problem_num: i32,
     pub contest_id: String,
     pub num_samples: i32,
+    pub time_limit: i32,
 }
 
 #[derive(Debug, Queryable, Serialize, Clone)]
@@ -33,5 +34,6 @@ pub struct GeneralSubmissionInfo{
     pub problem_id: i32,
     pub problem_name: String,
     pub created_at: NaiveDateTime,
-    pub verdict: String
+    pub verdict: String,
+    pub time_taken: Option<i32>,
 }
