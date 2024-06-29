@@ -42,6 +42,7 @@ diesel::table! {
         created_at -> Timestamp,
         #[max_length = 255]
         verdict -> Varchar,
+        time_taken -> Nullable<Int4>,
     }
 }
 
@@ -54,6 +55,7 @@ diesel::table! {
         out -> Varchar,
         #[max_length = 40]
         verdict -> Varchar,
+        time_taken -> Int4,
     }
 }
 

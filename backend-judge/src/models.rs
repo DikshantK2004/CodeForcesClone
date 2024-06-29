@@ -186,7 +186,8 @@ pub struct Submission{
     pub user_id: i32,
     pub problem_id: i32,
     pub created_at: NaiveDateTime,
-    pub verdict: String
+    pub verdict: String,
+    pub time_taken: Option<i32>
 }
 
 
@@ -196,7 +197,8 @@ pub struct NewTestResult{
     pub submission_id: i32,
     pub test_num: i32,
     pub out: String,
-    pub verdict: String
+    pub verdict: String,
+    pub time_taken: i32,
 }
 // #[derive(Debug, Serialize, Deserialize)]
 // pub struct ProblemInput{
