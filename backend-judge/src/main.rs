@@ -28,7 +28,7 @@ async fn main() -> shuttle_rocket::ShuttleRocket {
     let rocket = rocket::build().mount("/", routes![index, create, login])
         .mount("/contests/", routes![create_contest, update_contest, get_all_contests, get_particular_contest])
         .mount("/problems/", routes![get_all_problems, get_particular_problem])
-        .mount("/submit", routes![submit, general_submission_handler, user_submissions]);
+        .mount("/submit", routes![submit, general_submission_handler, user_submissions, leaderboard]);
 
     Ok(rocket.into())
 }

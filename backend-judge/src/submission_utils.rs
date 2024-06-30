@@ -7,7 +7,9 @@ use diesel::{QueryDsl, RunQueryDsl};
 use crate::database::establish_connection;
 use crate::models::{NewSubmission, NewTestResult, Problem, Submission};
 use crate::schema::{submissions, test_results};
-use diesel::expression_methods::ExpressionMethods; // IMPORANT: for eq
+use diesel::expression_methods::ExpressionMethods;
+use itertools::Itertools;
+use crate::responses::LeaderboardCell; // IMPORANT: for eq
 
 
 enum Verdicts{
@@ -288,4 +290,25 @@ pub fn run_tests(submission: Submission, problem: Problem) -> (){
     validate(&submission, &*contest_id, problem_num, num_tests, time_limit).unwrap_or_else(|e|{
         println!("Error validating submission: {:?}", e);
     });
+}
+
+
+pub fn group_by_user_id(cells: Vec<LeaderboardCell>) -> Vec<(i32, Vec<LeaderboardCell>)>{
+    let grouped_cells= cells.into_iter()
+        .sorted_by_key(|cell |  cell.user_id)
+        .chunk_by(|cell| cell.user_id)
+        .into_iter()
+        .map(|(user_id, group)| (user_id, group.collect()))
+        .collect();
+    grouped_cells
+}
+
+pub fn group_by_problem_id(cells: Vec<LeaderboardCell>) -> Vec<(i32, Vec<LeaderboardCell>)>{
+    let grouped_cells= cells.into_iter()
+        .sorted_by_key(|cell |  cell.problem_id)
+        .chunk_by(|cell| cell.problem_id)
+        .into_iter()
+        .map(|(problem_id, group)| (problem_id, group.collect()))
+        .collect();
+    grouped_cells
 }

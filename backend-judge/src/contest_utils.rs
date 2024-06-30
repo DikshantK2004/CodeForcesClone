@@ -1,10 +1,12 @@
 use std::collections::HashMap;
 use std::fs::File;
 use std::path::Path;
+use chrono::{DateTime, FixedOffset, NaiveDateTime, Utc};
 use diesel::{PgConnection, RunQueryDsl};
 use uuid::Uuid;
 use zip::ZipArchive;
-use crate::models::{Problem, SampleTestCase}; // zip 0.5.13
+use crate::models::{Problem, SampleTestCase};
+use crate::schema::users::star; // zip 0.5.13
 
 fn build_req_map(probs: &i32, nums_tests: &Vec<i32>, nums_samples: &Vec<i32>) -> HashMap<String, bool>{
     let mut m: HashMap<String, bool> = HashMap::new();
@@ -198,3 +200,21 @@ pub fn compile_validators(contest_id: &str, num_problems: i32) -> Result<(), Str
     Ok(())
 }
 
+pub fn check_if_contest_available(start_date: NaiveDateTime) -> Result<(), ()>{
+    // Get current UTC DateTime
+    let current_utc: DateTime<Utc> = Utc::now();
+
+    // Convert UTC DateTime to IST DateTime (UTC+5:30)
+    let ist_offset = FixedOffset::east(5 * 3600 + 30 * 60);
+    let current_ist = current_utc.with_timezone(&ist_offset);
+
+    // Convert current IST DateTime to NaiveDateTime for comparison
+    let current_ist_naive = current_ist.naive_local();
+    println!("{} {}", current_ist_naive, start_date);
+    if start_date > current_ist_naive {
+        return Err(());
+    }
+
+    Ok(())
+
+}

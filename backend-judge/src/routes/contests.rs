@@ -103,7 +103,7 @@ pub async fn create_contest(formFields: Form<ContestData<'_>>) -> (Status,Result
         return (Status::InternalServerError, Err(e));
     }
 
-    (Status::Ok, Ok(String::from("Contest created successfully ")))
+    (Status::Ok, Ok(format!("Contest created successfully: {} ", new_id)))
 }
 
 
@@ -217,7 +217,7 @@ pub fn get_all_contests() -> Result<Json<Vec<GeneralContestInfo>>, String>{
 }
 
 #[get("/particular/<contest_id>")]
-pub fn get_particular_contest(contest_id: String) -> Result<Json<ContestResponse>, String>{
+pub fn get_particular_contest(contest_id: String) -> (Status,Result<Json<ContestResponse>, String>){
     let connection = &mut establish_connection();
     let results =  crate::schema::contests::table.inner_join(crate::schema::problems::table)
                     .filter(crate::schema::contests::id.eq(contest_id.clone()))
@@ -225,16 +225,21 @@ pub fn get_particular_contest(contest_id: String) -> Result<Json<ContestResponse
                     .load::<(Contest, GeneralProblemInfo)>(connection);
 
     if let Err(e) = results{
-        return Err(format!("Error getting contest: {:?}", e));
+        return (Status::InternalServerError, Err(format!("Error getting contest: {:?}", e)));
     }
 
+
+
     let data = results.unwrap();
+    if let Err(_) = check_if_contest_available(data[0].0.start_date){
+        return (Status::Unauthorized ,Err("Contest has not started yet".parse().unwrap()));
+    }
 
     if data.len() == 0{
-        return Err(String::from("No such contest found"));
+        return (Status::NotFound, Err(String::from("No such contest found")));
     }
 
     let res = ContestResponse::from_contest(data[0].0.clone(), data.iter().map(|x| GeneralProblemInfo::from(x.1.clone())).collect());
 
-    Ok(Json(res))
+    (Status::Ok,Ok(Json(res)))
 }

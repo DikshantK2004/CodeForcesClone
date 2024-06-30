@@ -37,3 +37,47 @@ pub struct GeneralSubmissionInfo{
     pub verdict: String,
     pub time_taken: Option<i32>,
 }
+
+#[derive(Debug, Serialize)]
+pub struct LeaderboardSubmissionInfo{
+    pub submission_id: i32,
+    pub created_at: NaiveDateTime,
+    pub verdict: String,
+    pub time_taken: Option<i32>
+}
+
+#[derive(Debug, Serialize)]
+pub struct LeaderboardRow{
+    pub user_id: i32,
+    pub username: String,
+    pub cells: Vec<LeaderboardProblem>
+}
+
+#[derive(Debug, Serialize)]
+pub struct LeaderboardProblem{
+    pub problem_num: i32,
+    pub problem_id: i32,
+    pub submissions: Vec<LeaderboardSubmissionInfo>
+}
+#[derive(Debug, Serialize, Queryable)]
+pub struct LeaderboardCell{
+    pub user_id: i32,
+    pub username: String,
+    pub submission_id: i32,
+    pub problem_num: i32,
+    pub problem_id: i32,
+    pub created_at: NaiveDateTime,
+    pub verdict: String,
+    pub time_taken: Option<i32>
+}
+
+impl LeaderboardSubmissionInfo{
+    pub fn from_cell(cell: LeaderboardCell) -> Self{
+        LeaderboardSubmissionInfo{
+            submission_id: cell.submission_id,
+            created_at: cell.created_at,
+            verdict: cell.verdict,
+            time_taken: cell.time_taken
+        }
+    }
+}
