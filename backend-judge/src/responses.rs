@@ -81,3 +81,15 @@ impl LeaderboardSubmissionInfo{
         }
     }
 }
+
+
+#[derive(Debug, Serialize, Queryable)]
+pub struct ContestSubmissions{
+    pub id: i32,
+    pub problem_id: i32,
+    pub problem_name: String,
+    pub created_at: NaiveDateTime,
+    pub verdict: String,
+    pub time_taken: Option<i32>,
+    pub user_id: i32,
+}

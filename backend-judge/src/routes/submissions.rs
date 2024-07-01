@@ -14,13 +14,35 @@ use crate::schema::submissions::columns as submission_columns;
 use crate::schema::users::columns as user_columns;
 use diesel::ExpressionMethods;
 use itertools::Itertools;
-use crate::responses::{GeneralSubmissionInfo, LeaderboardCell, LeaderboardProblem, LeaderboardRow, LeaderboardSubmissionInfo};
+use crate::contest_utils::fetch_start_date;
+use crate::responses::{ContestSubmissions, GeneralSubmissionInfo, LeaderboardCell, LeaderboardProblem, LeaderboardRow, LeaderboardSubmissionInfo};
 use crate::schema::users::dsl::users;
+
+
 
 #[post("/", data = "<sub>")]
 pub fn submit(sub: Json<NewSubmission>) -> (Status, Result<String, String>){
     let mut connection = establish_connection();
     let new_submission = sub.into_inner();
+
+    let contest_id = problems
+        .select(problem_columns::contest_id)
+        .filter(problem_columns::id.eq(new_submission.problem_id))
+        .first::<String>(&mut connection);
+
+    if let Err(e) = contest_id{
+        return (Status::InternalServerError, Err(String::from("Error fetching contest id")));
+    }
+
+    let contest_id = contest_id.unwrap();
+    let cur_time = fetch_start_date(contest_id.as_str());
+    if let Err(_) = cur_time{
+        return (Status::InternalServerError, Err(String::from("Error fetching contest start date")));
+    }
+    let check = crate::contest_utils::check_if_contest_available(cur_time.unwrap());
+    if let Err(_) = check{
+        return (Status::Forbidden, Err(String::from("Contest has not started yet, No Submissions allowed.")));
+    }
 
 
     // fetch the problem
@@ -69,6 +91,7 @@ pub fn general_submission_handler(id: String) -> Result<Json<GeneralSubmissionIn
             submission_columns::time_taken
         ))
         .filter(submission_columns::id.eq(submission_id))
+        .order_by(submission_columns::created_at.desc())
         .first::<GeneralSubmissionInfo>(connection);
 
     if let Err(e) = sub{
@@ -101,7 +124,62 @@ pub fn user_submissions(id: String) -> Result<Json<Vec<GeneralSubmissionInfo>>, 
             submission_columns::time_taken
         ))
         .filter(submission_columns::user_id.eq(user_id))
+        .order_by(submission_columns::created_at.desc())
         .load::<GeneralSubmissionInfo>(connection);
+
+    if let Err(e) = sub{
+        return Err(format!("Error fetching submission: {}", e));
+    }
+    Ok(Json(sub.unwrap()))
+}
+
+#[get("/user_contest/<user_id>/<contest_id>")]
+pub fn user_contest_submissions(user_id: String, contest_id: String) -> Result<Json<Vec<GeneralSubmissionInfo>>, String>{
+    let user_id = match user_id.parse::<i32>(){
+        Ok(id) => id,
+        Err(e) => return Err(format!("Invalid user id: {}", e))
+    };
+
+    let connection = &mut establish_connection();
+    let sub = submissions
+        .inner_join(problems.on(submission_columns::problem_id.eq(problem_columns::id)))
+        .select((
+            submission_columns::id,
+            submission_columns::problem_id,
+            problem_columns::name,
+            submission_columns::created_at,
+            submission_columns::verdict,
+            submission_columns::time_taken
+        ))
+        .filter(submission_columns::user_id.eq(user_id))
+        .filter(problem_columns::contest_id.eq(contest_id))
+        .order_by(submission_columns::created_at.desc())
+        .load::<GeneralSubmissionInfo>(connection);
+
+    if let Err(e) = sub{
+        return Err(format!("Error fetching submission: {}", e));
+    }
+    Ok(Json(sub.unwrap()))
+}
+
+#[get("/contest/<contest_id>")]
+pub fn contest_submissions(contest_id: String) -> Result<Json<Vec<ContestSubmissions>>, String>{
+    let connection = &mut establish_connection();
+    let sub = submissions
+        .inner_join(problems.on(submission_columns::problem_id.eq(problem_columns::id)))
+        .inner_join(users.on(user_columns::id.eq(submission_columns::user_id)))
+        .select((
+            submission_columns::id,
+            submission_columns::problem_id,
+            problem_columns::name,
+            submission_columns::created_at,
+            submission_columns::verdict,
+            submission_columns::time_taken,
+            user_columns::id
+        ))
+        .filter(problem_columns::contest_id.eq(contest_id))
+        .order_by(submission_columns::created_at.desc())
+        .load::<ContestSubmissions>(connection);
 
     if let Err(e) = sub{
         return Err(format!("Error fetching submission: {}", e));

@@ -2,10 +2,12 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::path::Path;
 use chrono::{DateTime, FixedOffset, NaiveDateTime, Utc};
-use diesel::{PgConnection, RunQueryDsl};
+use diesel::{PgConnection, QueryDsl, RunQueryDsl};
 use uuid::Uuid;
 use zip::ZipArchive;
+use crate::database::establish_connection;
 use crate::models::{Problem, SampleTestCase};
+use diesel::ExpressionMethods;
 use crate::schema::users::star; // zip 0.5.13
 
 fn build_req_map(probs: &i32, nums_tests: &Vec<i32>, nums_samples: &Vec<i32>) -> HashMap<String, bool>{
@@ -216,5 +218,18 @@ pub fn check_if_contest_available(start_date: NaiveDateTime) -> Result<(), ()>{
     }
 
     Ok(())
+}
 
+pub fn fetch_start_date(contest_id: &str) -> Result<NaiveDateTime, ()>{
+    let  conn =&mut establish_connection();
+    let dat = crate::schema::contests::table
+        .filter(crate::schema::contests::id.eq(contest_id))
+        .select(crate::schema::contests::columns::start_date)
+        .first::<NaiveDateTime>(conn);
+
+    if let Err(e) = dat{
+        return Err(());
+    }
+
+    Ok(dat.unwrap())
 }

@@ -24,24 +24,42 @@ use crate::contest_utils::*;
 use crate::schema::contests::dsl::contests;
 use crate::schema::problems::dsl::problems;
 
-
-
+use crate::schema::problems::columns as problem_columns;
+use crate::schema::contests::columns as contest_columns;
 
 #[get("/all")]
 pub fn get_all_problems() -> (Status, Result<Json<Vec<GeneralProblemInfo>>, String>){
+
     let connection = &mut establish_connection();
-    let all_problems = problems.select(GeneralProblemInfo::as_select()).load(connection);
+    let cur_time = crate::utils::get_current_ist();
+    let all_problems = problems
+        .inner_join(contests.on(problem_columns::contest_id.eq(contest_columns::id)))
+        .select(GeneralProblemInfo::as_select())
+        .filter(contest_columns::start_date.le(cur_time))
+        .order_by(contest_columns::start_date.desc())
+        .load(connection);
 
     if let Err(e) = all_problems{
         return (Status::InternalServerError, Err(format!("Error: {:?}", e)));
     }
+    let probs = all_problems.unwrap();
 
-
-    (Status::Ok, Ok(Json(all_problems.unwrap())))
+    (Status::Ok, Ok(Json(probs)))
 }
 
 #[get("/<contest_id>/<num>")]
 pub fn get_particular_problem(contest_id: String, num: String) -> (Status, Result<Json<ProblemResponse>, String>){
+
+    let start_date = fetch_start_date(contest_id.as_str());
+
+    if let Err(_) = start_date{
+        return (Status::InternalServerError, Err(String::from("Error fetching contest start date")));
+    }
+    let check = check_if_contest_available(start_date.unwrap());
+    if let Err(_) = check{
+        return (Status::Forbidden, Err(String::from("Contest has not started yet")));
+    }
+
     let connection = &mut establish_connection();
     let p_num = num.parse::<i32>();
     if let Err(e) = p_num{
