@@ -89,7 +89,7 @@ pub struct Contest{
     pub start_date: NaiveDateTime,
     pub end_date: NaiveDateTime,
     pub created_at: Option<NaiveDateTime>,
-    pub updated_at: Option<NaiveDateTime>,
+    pub updated_at: Option<NaiveDateTime,>,
     pub creator_id: i32,
 }
 
@@ -147,8 +147,8 @@ pub struct ContestResponse{
     pub num_problems: i32,
     pub start_date: NaiveDateTime,
     pub end_date: NaiveDateTime,
-    pub created_at: Option<NaiveDateTime>,
-    pub updated_at: Option<NaiveDateTime>,
+    pub created_at: Option<NaiveDateTime,>,
+    pub updated_at: Option<NaiveDateTime,>,
     pub problems: Vec<GeneralProblemInfo>
 }
 
@@ -184,7 +184,7 @@ pub struct NewSubmission{
     pub problem_id: i32,
 }
 
-#[derive(Debug, Serialize, Queryable, Identifiable, Insertable)]
+#[derive(Debug, Serialize, Queryable, Identifiable, Insertable, Selectable)]
 pub struct Submission{
     pub id: i32,
     pub code: String,

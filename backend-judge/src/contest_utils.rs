@@ -206,17 +206,12 @@ pub fn check_if_contest_available(start_date: NaiveDateTime) -> Result<(), ()>{
     // Get current UTC DateTime
     let current_utc: DateTime<Utc> = Utc::now();
 
-    // Convert UTC DateTime to IST DateTime (UTC+5:30)
-    let ist_offset = FixedOffset::east(5 * 3600 + 30 * 60);
-    let current_ist = current_utc.with_timezone(&ist_offset);
-
     // Convert current IST DateTime to NaiveDateTime for comparison
-    let current_ist_naive = current_ist.naive_local();
-    println!("{} {}", current_ist_naive, start_date);
+    let current_ist_naive = current_utc.naive_local();
+    println!("Current IST: {:?}, Start date: {:?}", current_ist_naive, start_date);
     if start_date > current_ist_naive {
         return Err(());
     }
-
     Ok(())
 }
 

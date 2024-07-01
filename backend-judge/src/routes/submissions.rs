@@ -6,18 +6,22 @@ use crate::database::establish_connection;
 use crate::models::{NewSubmission, Problem, Submission};
 use crate::submission_utils::{group_by_problem_id, group_by_user_id, run_tests};
 use std::thread;
+use chrono::NaiveDateTime;
 use diesel::associations::HasTable;
 use crate::schema::problems::dsl::problems;
 use crate::schema::submissions::dsl::submissions;
 use crate::schema::problems::columns as problem_columns;
 use crate::schema::submissions::columns as submission_columns;
 use crate::schema::users::columns as user_columns;
+use crate::schema::test_results::columns as test_result_columns;
 use diesel::ExpressionMethods;
 use itertools::Itertools;
 use crate::contest_utils::fetch_start_date;
-use crate::responses::{ContestSubmissions, GeneralSubmissionInfo, LeaderboardCell, LeaderboardProblem, LeaderboardRow, LeaderboardSubmissionInfo};
+use crate::responses::{ContestSubmissions, GeneralSubmissionInfo, LeaderboardCell, LeaderboardProblem, LeaderboardRow, LeaderboardSubmissionInfo, SubmissionResponse, TestResultResponse};
+use crate::schema::test_results::dsl::test_results;
 use crate::schema::users::dsl::users;
-
+use crate::schema::contests::{columns as contest_columns};
+use crate::schema::contests::dsl::contests;
 
 
 #[post("/", data = "<sub>")]
@@ -245,4 +249,55 @@ pub fn leaderboard(contest_id: String) -> Result<Json<Vec<LeaderboardRow>>, Stri
 
     Ok(Json(rows))
 
+}
+
+#[get("/particular/<submission_id>")]
+pub fn particular_submission(submission_id: String) -> Result<Json<SubmissionResponse>, String>{
+    let submission_id = match submission_id.parse::<i32>(){
+        Ok(id) => id,
+        Err(e) => return Err(format!("Invalid submission id: {}", e))
+    };
+
+    let connection = &mut establish_connection();
+    let sub = submissions
+        .inner_join(test_results.on(submission_columns::id.eq(test_result_columns::submission_id)))
+        .select((Submission::as_select(), TestResultResponse::as_select()))
+        .filter(submission_columns::id.eq(submission_id))
+        .order_by(test_result_columns::test_num.asc())
+        .load::<(Submission, TestResultResponse)>(connection);
+
+    let end_date = problems
+        .inner_join(submissions.on(problem_columns::id.eq(submission_columns::problem_id)))
+        .inner_join(contests.on(problem_columns::contest_id.eq(contest_columns::id)))
+        .select(contest_columns::end_date)
+        .filter(submission_columns::id.eq(submission_id))
+        .first::<NaiveDateTime>(connection);
+
+    if let Err(e) = end_date{
+        return Err(format!("Error fetching end date: {}", e));
+    }
+
+    let end_date = end_date.unwrap();
+
+
+    if let Err(e) = sub{
+        return Err(format!("Error fetching submission: {}", e));
+    }
+    let sub = sub.unwrap();
+
+    if sub.len() == 0{
+        return Err(String::from("No such submission found"));
+    }
+
+    let test_results_vec : Vec<TestResultResponse>= sub.iter()
+        .map(|(_, test_result)| test_result.clone())
+        .collect();
+
+    let response = SubmissionResponse::from_submission(&sub[0].0, test_results_vec);
+
+    if response.created_at < end_date{
+        return Err(String::from("Submission is not available yet"));
+    }
+
+    Ok(Json(response))
 }

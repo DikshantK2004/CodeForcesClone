@@ -93,3 +93,42 @@ pub struct ContestSubmissions{
     pub time_taken: Option<i32>,
     pub user_id: i32,
 }
+
+
+#[derive(Debug, Serialize, Selectable, Queryable,Clone)]
+#[diesel(table_name = test_results)]
+pub struct TestResultResponse{
+    pub test_num: i32,
+    pub out: String,
+    pub verdict: String,
+    pub time_taken: i32
+}
+
+#[derive(Debug, Serialize)]
+pub struct SubmissionResponse{
+    pub id: i32,
+    pub code: String,
+    pub extension: String,
+    pub user_id: i32,
+    pub problem_id: i32,
+    pub created_at: NaiveDateTime,
+    pub verdict: String,
+    pub time_taken: Option<i32>,
+    pub test_results: Vec<TestResultResponse>
+}
+
+impl SubmissionResponse{
+    pub fn from_submission(submission: &crate::models::Submission, test_results: Vec<TestResultResponse>) -> Self{
+        SubmissionResponse{
+            id: submission.id,
+            code: submission.code.clone(),
+            extension: submission.extension.clone(),
+            user_id: submission.user_id,
+            problem_id: submission.problem_id,
+            created_at: submission.created_at,
+            verdict: submission.verdict.clone(),
+            time_taken: submission.time_taken,
+            test_results
+        }
+    }
+}
