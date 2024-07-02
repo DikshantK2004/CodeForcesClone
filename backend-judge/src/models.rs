@@ -7,6 +7,7 @@ use crate::schema::{users, problems, contests, submissions, test_results};
 use rocket::{FromForm};
 use rocket::fs::TempFile;
 use rocket::serde::json::Json;
+use crate::auth::AuthenticatedUser;
 use crate::responses::GeneralProblemInfo;
 
 // This struct represents a row in the `users` table
@@ -170,6 +171,12 @@ pub struct SampleTestCase{
 }
 
 
+#[derive(Debug,  Deserialize)]
+pub struct NewSubmissionRequest{
+    pub code: String,
+    pub extension: String,
+    pub problem_id: i32,
+}
 #[derive(Debug, Serialize, Deserialize, Insertable)]
 #[diesel(table_name = submissions)]
 pub struct NewSubmission{
@@ -179,6 +186,16 @@ pub struct NewSubmission{
     pub problem_id: i32,
 }
 
+impl NewSubmission{
+    pub fn from_request(authUser:AuthenticatedUser, req: NewSubmissionRequest) -> NewSubmission{
+        NewSubmission{
+            code: req.code,
+            extension: req.extension,
+            user_id: authUser.0,
+            problem_id: req.problem_id
+        }
+    }
+}
 #[derive(Debug, Serialize, Queryable, Identifiable, Insertable, Selectable)]
 pub struct Submission{
     pub id: i32,

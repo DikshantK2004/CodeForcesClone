@@ -3,7 +3,7 @@ use rocket::{get, post};
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use crate::database::establish_connection;
-use crate::models::{NewSubmission, Problem, Submission};
+use crate::models::{NewSubmission, NewSubmissionRequest, Problem, Submission};
 use crate::submission_utils::{group_by_problem_id, group_by_user_id, run_tests};
 use std::thread;
 use chrono::NaiveDateTime;
@@ -16,8 +16,9 @@ use crate::schema::users::columns as user_columns;
 use crate::schema::test_results::columns as test_result_columns;
 use diesel::ExpressionMethods;
 use itertools::Itertools;
+use crate::auth::AuthenticatedUser;
 use crate::contest_utils::fetch_start_date;
-use crate::responses::{ContestSubmissions, GeneralSubmissionInfo, LeaderboardCell, LeaderboardProblem, LeaderboardRow, LeaderboardSubmissionInfo, SubmissionResponse, TestResultResponse};
+use crate::responses::{GeneralSubmissionInfo, LeaderboardCell, LeaderboardProblem, LeaderboardRow, LeaderboardSubmissionInfo, SubmissionResponse, TestResultResponse};
 use crate::schema::test_results::dsl::test_results;
 use crate::schema::users::dsl::users;
 use crate::schema::contests::{columns as contest_columns};
@@ -25,9 +26,9 @@ use crate::schema::contests::dsl::contests;
 
 
 #[post("/", data = "<sub>")]
-pub fn submit(sub: Json<NewSubmission>) -> (Status, Result<String, String>){
+pub fn submit(authUser: AuthenticatedUser, sub: Json<NewSubmissionRequest>) -> (Status, Result<String, String>){
     let mut connection = establish_connection();
-    let new_submission = sub.into_inner();
+    let new_submission = NewSubmission::from_request(authUser, sub.into_inner());
 
     let contest_id = problems
         .select(problem_columns::contest_id)
@@ -86,8 +87,10 @@ pub fn general_submission_handler(id: String) -> Result<Json<GeneralSubmissionIn
     let connection = &mut establish_connection();
     let sub = submissions
         .inner_join(problems.on(submission_columns::problem_id.eq(problem_columns::id)))
+        .inner_join(users.on(submission_columns::user_id.eq(user_columns::id)))
         .select((
             submission_columns::id,
+            user_columns::username,
             submission_columns::problem_id,
             problem_columns::name,
             submission_columns::created_at,
@@ -105,14 +108,15 @@ pub fn general_submission_handler(id: String) -> Result<Json<GeneralSubmissionIn
 }
 
 #[get("/user/<user_name>")]
-pub fn user_submissions(user_name: String) -> Result<Json<Vec<GeneralSubmissionInfo>>, String>{
+pub fn user_submissions(user_name: String) -> (Status, Result<Json<Vec<GeneralSubmissionInfo>>, String>){
 
     let mut connection = &mut establish_connection();
     let sub = submissions
-        .inner_join(users.on(submission_columns::user_id.eq(user_columns::id))
+        .inner_join(users.on(submission_columns::user_id.eq(user_columns::id)))
         .inner_join(problems.on(submission_columns::problem_id.eq(problem_columns::id)))
         .select((
             submission_columns::id,
+            user_columns::username,
             submission_columns::problem_id,
             problem_columns::name,
             submission_columns::created_at,
@@ -124,21 +128,21 @@ pub fn user_submissions(user_name: String) -> Result<Json<Vec<GeneralSubmissionI
         .load::<GeneralSubmissionInfo>(connection);
 
     if let Err(e) = sub{
-        return Err(format!("Error fetching submission: {}", e));
+        return (Status::InternalServerError, Err(format!("Error fetching submission: {}", e)));
     }
-    Ok(Json(sub.unwrap()))
+    (Status::Ok, Ok(Json(sub.unwrap())))
 }
 
 #[get("/user_contest/<user_name>/<contest_id>")]
-pub fn user_contest_submissions(user_name: String, contest_id: String) -> Result<Json<Vec<GeneralSubmissionInfo>>, String>{
-
-
+pub fn user_contest_submissions(user_name: String, contest_id: String) -> (Status, Result<Json<Vec<GeneralSubmissionInfo>>, String>){
     let connection = &mut establish_connection();
+    println!("{}", user_name);
     let sub = submissions
         .inner_join(problems.on(submission_columns::problem_id.eq(problem_columns::id)))
         .inner_join(users.on(submission_columns::user_id.eq(user_columns::id)))
         .select((
             submission_columns::id,
+            user_columns::username,
             submission_columns::problem_id,
             problem_columns::name,
             submission_columns::created_at,
@@ -151,43 +155,44 @@ pub fn user_contest_submissions(user_name: String, contest_id: String) -> Result
         .load::<GeneralSubmissionInfo>(connection);
 
     if let Err(e) = sub{
-        return Err(format!("Error fetching submission: {}", e));
+        return (Status::InternalServerError, Err(format!("Error fetching submission: {}", e)));
     }
-    Ok(Json(sub.unwrap()))
+    (Status::Ok, Ok(Json(sub.unwrap())))
 }
 
 #[get("/contest/<contest_id>")]
-pub fn contest_submissions(contest_id: String) -> Result<Json<Vec<ContestSubmissions>>, String>{
+pub fn contest_submissions(contest_id: String) -> (Status, Result<Json<Vec<GeneralSubmissionInfo>>, String>){
     let connection = &mut establish_connection();
     let sub = submissions
         .inner_join(problems.on(submission_columns::problem_id.eq(problem_columns::id)))
         .inner_join(users.on(user_columns::id.eq(submission_columns::user_id)))
         .select((
             submission_columns::id,
+            user_columns::username,
             submission_columns::problem_id,
             problem_columns::name,
             submission_columns::created_at,
             submission_columns::verdict,
-            submission_columns::time_taken,
-            user_columns::id
+            submission_columns::time_taken
         ))
         .filter(problem_columns::contest_id.eq(contest_id))
         .order_by(submission_columns::created_at.desc())
-        .load::<ContestSubmissions>(connection);
+        .load::<GeneralSubmissionInfo>(connection);
 
     if let Err(e) = sub{
-        return Err(format!("Error fetching submission: {}", e));
+        return (Status::InternalServerError, Err(format!("Error fetching submission: {}", e)));
     }
-    Ok(Json(sub.unwrap()))
+    (Status::Ok, Ok(Json(sub.unwrap())))
 }
 
 #[get("/leaderboard/<contest_id>")]
-pub fn leaderboard(contest_id: String) -> Result<Json<Vec<LeaderboardRow>>, String>{
+pub fn leaderboard(contest_id: String) -> (Status, Result<Json<Vec<LeaderboardRow>>, String>){
     let connection = &mut establish_connection();
     let data = submissions
         .inner_join(problems.on(submission_columns::problem_id.eq(problem_columns::id)))
         .inner_join(users.on(user_columns::id.eq(submission_columns::user_id)))
         .select((
+            user_columns::id,
             user_columns::username,
             submission_columns::id,
             problem_columns::problem_num,
@@ -200,7 +205,7 @@ pub fn leaderboard(contest_id: String) -> Result<Json<Vec<LeaderboardRow>>, Stri
         .load::<LeaderboardCell>(connection);
 
     if let Err(e) = data{
-        return Err(format!("Error fetching data: {}", e));
+        return (Status::InternalServerError, Err(format!("Error fetching data: {}", e)));
     }
     fn problem_mapper((problem_id, cells) : (i32, Vec<LeaderboardCell>)) -> LeaderboardProblem{
         let problem_num = cells[0].problem_num;
@@ -235,15 +240,15 @@ pub fn leaderboard(contest_id: String) -> Result<Json<Vec<LeaderboardRow>>, Stri
         })
         .collect();
 
-    Ok(Json(rows))
+   (Status::Ok,  Ok(Json(rows)))
 
 }
 
 #[get("/particular/<submission_id>")]
-pub fn particular_submission(submission_id: String) -> Result<Json<SubmissionResponse>, String>{
+pub fn particular_submission(submission_id: String) -> (Status,Result<Json<SubmissionResponse>, String>){
     let submission_id = match submission_id.parse::<i32>(){
         Ok(id) => id,
-        Err(e) => return Err(format!("Invalid submission id: {}", e))
+        Err(e) => return (Status::NotFound, Err(format!("Invalid submission id: {}", e)))
     };
 
     let connection = &mut establish_connection();
@@ -262,19 +267,19 @@ pub fn particular_submission(submission_id: String) -> Result<Json<SubmissionRes
         .first::<NaiveDateTime>(connection);
 
     if let Err(e) = end_date{
-        return Err(format!("Error fetching end date: {}", e));
+        return (Status:: Forbidden, Err(format!("Error fetching end date: {}", e)));
     }
 
     let end_date = end_date.unwrap();
 
 
     if let Err(e) = sub{
-        return Err(format!("Error fetching submission: {}", e));
+        return (Status::InternalServerError, Err(format!("Error fetching submission: {}", e)));
     }
     let sub = sub.unwrap();
 
     if sub.len() == 0{
-        return Err(String::from("No such submission found"));
+        return (Status::NotFound, Err(String::from("No such submission found")));
     }
 
     let test_results_vec : Vec<TestResultResponse>= sub.iter()
@@ -284,8 +289,8 @@ pub fn particular_submission(submission_id: String) -> Result<Json<SubmissionRes
     let response = SubmissionResponse::from_submission(&sub[0].0, test_results_vec);
 
     if response.created_at < end_date{
-        return Err(String::from("Submission is not available yet"));
+        return (Status::Forbidden, Err(String::from("Submission is not available yet")));
     }
 
-    Ok(Json(response))
+    (Status::Ok, Ok(Json(response)))
 }

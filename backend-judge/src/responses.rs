@@ -31,6 +31,7 @@ pub struct GeneralProblemInfo{
 #[derive(Debug, Queryable, Serialize, Clone)]
 pub struct GeneralSubmissionInfo{
     pub id: i32,
+    pub username: String,
     pub problem_id: i32,
     pub problem_name: String,
     pub created_at: NaiveDateTime,
@@ -60,6 +61,7 @@ pub struct LeaderboardProblem{
 }
 #[derive(Debug, Serialize, Queryable)]
 pub struct LeaderboardCell{
+    pub user_id: i32,
     pub username: String,
     pub submission_id: i32,
     pub problem_num: i32,
@@ -81,17 +83,6 @@ impl LeaderboardSubmissionInfo{
 }
 
 
-#[derive(Debug, Serialize, Queryable)]
-pub struct ContestSubmissions{
-    pub id: i32,
-    pub problem_id: i32,
-    pub problem_name: String,
-    pub created_at: NaiveDateTime,
-    pub verdict: String,
-    pub time_taken: Option<i32>,
-    pub user_id: i32,
-}
-
 
 #[derive(Debug, Serialize, Selectable, Queryable,Clone)]
 #[diesel(table_name = test_results)]
@@ -107,7 +98,6 @@ pub struct SubmissionResponse{
     pub id: i32,
     pub code: String,
     pub extension: String,
-    pub user_id: i32,
     pub problem_id: i32,
     pub created_at: NaiveDateTime,
     pub verdict: String,
@@ -121,7 +111,6 @@ impl SubmissionResponse{
             id: submission.id,
             code: submission.code.clone(),
             extension: submission.extension.clone(),
-            user_id: submission.user_id,
             problem_id: submission.problem_id,
             created_at: submission.created_at,
             verdict: submission.verdict.clone(),
