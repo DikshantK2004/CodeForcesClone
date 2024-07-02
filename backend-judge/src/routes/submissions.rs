@@ -104,20 +104,12 @@ pub fn general_submission_handler(id: String) -> Result<Json<GeneralSubmissionIn
     Ok(Json(sub.unwrap()))
 }
 
-#[get("/user/<id>")]
-pub fn user_submissions(id: String) -> Result<Json<Vec<GeneralSubmissionInfo>>, String>{
-
-    let user_id = match id.parse::<i32>(){
-        Ok(id) => id,
-        Err(e) => return Err(format!("Invalid user id: {}", e))
-    };
-    let user_id = match id.parse::<i32>(){
-        Ok(id) => id,
-        Err(e) => return Err(format!("Invalid user id: {}", e))
-    };
+#[get("/user/<user_name>")]
+pub fn user_submissions(user_name: String) -> Result<Json<Vec<GeneralSubmissionInfo>>, String>{
 
     let mut connection = &mut establish_connection();
     let sub = submissions
+        .inner_join(users.on(submission_columns::user_id.eq(user_columns::id))
         .inner_join(problems.on(submission_columns::problem_id.eq(problem_columns::id)))
         .select((
             submission_columns::id,
@@ -127,7 +119,7 @@ pub fn user_submissions(id: String) -> Result<Json<Vec<GeneralSubmissionInfo>>, 
             submission_columns::verdict,
             submission_columns::time_taken
         ))
-        .filter(submission_columns::user_id.eq(user_id))
+        .filter(user_columns::username.eq(user_name))
         .order_by(submission_columns::created_at.desc())
         .load::<GeneralSubmissionInfo>(connection);
 
@@ -137,16 +129,14 @@ pub fn user_submissions(id: String) -> Result<Json<Vec<GeneralSubmissionInfo>>, 
     Ok(Json(sub.unwrap()))
 }
 
-#[get("/user_contest/<user_id>/<contest_id>")]
-pub fn user_contest_submissions(user_id: String, contest_id: String) -> Result<Json<Vec<GeneralSubmissionInfo>>, String>{
-    let user_id = match user_id.parse::<i32>(){
-        Ok(id) => id,
-        Err(e) => return Err(format!("Invalid user id: {}", e))
-    };
+#[get("/user_contest/<user_name>/<contest_id>")]
+pub fn user_contest_submissions(user_name: String, contest_id: String) -> Result<Json<Vec<GeneralSubmissionInfo>>, String>{
+
 
     let connection = &mut establish_connection();
     let sub = submissions
         .inner_join(problems.on(submission_columns::problem_id.eq(problem_columns::id)))
+        .inner_join(users.on(submission_columns::user_id.eq(user_columns::id)))
         .select((
             submission_columns::id,
             submission_columns::problem_id,
@@ -155,7 +145,7 @@ pub fn user_contest_submissions(user_id: String, contest_id: String) -> Result<J
             submission_columns::verdict,
             submission_columns::time_taken
         ))
-        .filter(submission_columns::user_id.eq(user_id))
+        .filter(user_columns::username.eq(user_name))
         .filter(problem_columns::contest_id.eq(contest_id))
         .order_by(submission_columns::created_at.desc())
         .load::<GeneralSubmissionInfo>(connection);
@@ -198,8 +188,7 @@ pub fn leaderboard(contest_id: String) -> Result<Json<Vec<LeaderboardRow>>, Stri
         .inner_join(problems.on(submission_columns::problem_id.eq(problem_columns::id)))
         .inner_join(users.on(user_columns::id.eq(submission_columns::user_id)))
         .select((
-            user_columns::id,
-            user_columns::name,
+            user_columns::username,
             submission_columns::id,
             problem_columns::problem_num,
             problem_columns::id,
@@ -240,7 +229,6 @@ pub fn leaderboard(contest_id: String) -> Result<Json<Vec<LeaderboardRow>>, Stri
                 .collect();
 
             LeaderboardRow{
-                user_id,
                 username,
                 cells
             }

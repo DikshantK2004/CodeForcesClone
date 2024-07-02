@@ -9,8 +9,7 @@ pub fn status_message(status:Status, message: &str) -> (Status, Json<MessageResp
 }
 
 
-pub fn get_current_ist() ->NaiveDateTime{
+pub fn get_current_utc() ->NaiveDateTime{
     let utc_time = chrono::Utc::now();
-    let ist_time = utc_time.with_timezone(&chrono::FixedOffset::east(5*3600 + 30*60));
-    ist_time.naive_local()
+    utc_time.naive_local()
 }

@@ -31,7 +31,7 @@ use crate::schema::contests::columns as contest_columns;
 pub fn get_all_problems() -> (Status, Result<Json<Vec<GeneralProblemInfo>>, String>){
 
     let connection = &mut establish_connection();
-    let cur_time = crate::utils::get_current_ist();
+    let cur_time = crate::utils::get_current_utc();
     let all_problems = problems
         .inner_join(contests.on(problem_columns::contest_id.eq(contest_columns::id)))
         .select(GeneralProblemInfo::as_select())

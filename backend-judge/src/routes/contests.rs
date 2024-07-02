@@ -19,6 +19,7 @@ use rocket::form::Form;
 use rocket::fs::TempFile;
 use crate::utils::*;
 use uuid::Uuid;
+use crate::auth::AuthenticatedUser;
 use crate::models::GeneralContestInfo;
 
 //
@@ -34,9 +35,10 @@ use crate::schema::contests::dsl::contests;
 
 // upload a media zip file which will contain contest files
 #[post("/create", format = "multipart/form-data", data = "<formFields>")]
-pub async fn create_contest(formFields: Form<ContestData<'_>>) -> (Status,Result<String, String> ){
+pub async fn create_contest(authUser: AuthenticatedUser, formFields: Form<ContestData<'_>>) -> (Status,Result<String, String> ){
     // Get raw file
     let mut form = formFields.into_inner();
+    let user_id = authUser.0;
     let file_name = form.file.raw_name().unwrap().dangerous_unsafe_unsanitized_raw().as_str();
     let data = form.data.into_inner();
     let new_id = Uuid::new_v4().to_string();
@@ -86,7 +88,7 @@ pub async fn create_contest(formFields: Form<ContestData<'_>>) -> (Status,Result
     let num_samples = data.num_samples();
     let time_limits = data.time_limits();
     // gives up ownership of data
-    let contest = Contest::from_request(new_id.as_str(), data);
+    let contest = Contest::from_request(new_id.as_str(), data, user_id);
 
     diesel::insert_into(crate::schema::contests::table)
         .values(&contest)
@@ -108,8 +110,9 @@ pub async fn create_contest(formFields: Form<ContestData<'_>>) -> (Status,Result
 
 
 #[put("/update/<contest_id>", format = "multipart/form-data", data = "<formFields>")]
-pub async fn update_contest(contest_id: String, formFields: Form<ContestData<'_>>) -> (Status,Result<String, String> ) {
+pub async fn update_contest(authUser: AuthenticatedUser,contest_id: String, formFields: Form<ContestData<'_>>) -> (Status,Result<String, String> ) {
     // Get raw file
+    let user_id = authUser.0;
     let mut form = formFields.into_inner();
     let file_name = form.file.raw_name().unwrap().dangerous_unsafe_unsanitized_raw().as_str();
     let data = form.data.into_inner();
@@ -165,7 +168,7 @@ pub async fn update_contest(contest_id: String, formFields: Form<ContestData<'_>
     let num_samples = data.num_samples();
     let time_limits = data.time_limits();
 
-    let contest = Contest::from_request(contest_id.as_str(), data);
+    let contest = Contest::from_request(contest_id.as_str(), data, user_id);
     let update_status = diesel::update(crate::schema::contests::table.find(contest_id.clone()))
         .set(&contest)
         .execute(connection);

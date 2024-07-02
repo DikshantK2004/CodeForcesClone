@@ -14,6 +14,7 @@ use crate::responses::GeneralProblemInfo;
 pub struct User {
     pub id: i32,
     pub name: String,
+    pub username: String,
     pub email: String,
     pub password: String,
     pub verified: bool,
@@ -24,6 +25,7 @@ pub struct User {
 #[diesel(table_name = users)]
 pub struct NewUser {
     pub name: String,
+    pub username: String,
     pub email: String,
     pub password: String,
     pub verified: Option<bool>,
@@ -33,12 +35,6 @@ pub struct NewUser {
 pub struct LoginRequest {
     pub email: String,
     pub password: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Claims {
-    pub email: String,
-    pub exp: usize,
 }
 
 #[derive(Debug, Serialize)]
@@ -52,7 +48,6 @@ pub struct ContestRequest{
     pub description: String,
     pub start_date: String,
     pub end_date: String,
-    pub creator_id: i32,
     pub num_problems: i32,
     pub problem_names: Vec<String>,
     pub num_tests: Vec<i32>,
@@ -95,14 +90,14 @@ pub struct Contest{
 
 
 impl Contest{
-    pub fn from_request(id: &str, req: ContestRequest) -> Contest{
+    pub fn from_request(id: &str, req: ContestRequest, user_id: i32) -> Contest{
         Contest{
             id: id.to_string(),
             name: req.name,
             description: req.description,
             start_date: NaiveDateTime::parse_from_str(&req.start_date, "%d-%m-%Y %H:%M:%S").unwrap(),
             end_date: NaiveDateTime::parse_from_str(&req.end_date, "%d-%m-%Y %H:%M:%S").unwrap(),
-            creator_id: req.creator_id,
+            creator_id: user_id,
             num_problems: req.num_problems,
             created_at: None,
             updated_at: None

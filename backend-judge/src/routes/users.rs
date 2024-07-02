@@ -3,7 +3,7 @@ use rocket::{get, post, Response};
 use crate::database::establish_connection;
 use crate::models::{NewUser, User, LoginRequest, TokenResponse};
 // import Status
-use rocket::http::Status;
+use rocket::http::{Cookie, CookieJar, Status};
 use rocket::serde::json::Json;
 use diesel::result;
 use diesel::result::{DatabaseErrorKind, Error};
@@ -42,7 +42,7 @@ pub fn create(user: Json<NewUser>) -> (Status, Json<MessageResponse>){
             // return a message with status
 
             (Status::Conflict, Json(MessageResponse {
-                message: "User with email already already exists".to_string()
+                message: "User with email or username already already exists".to_string()
             })
             )
         }
@@ -59,7 +59,7 @@ pub fn create(user: Json<NewUser>) -> (Status, Json<MessageResponse>){
 }
 
 #[post("/login", data = "<payload>")]
-pub fn login(payload: Json<LoginRequest>) -> (Status, Result<Json<TokenResponse>, Json<MessageResponse>>){
+pub fn login(payload: Json<LoginRequest>, cookies: &CookieJar<'_>) -> (Status, Result<(), String>){
     let connection = &mut establish_connection();
     let data = payload.into_inner();
 
@@ -73,29 +73,31 @@ pub fn login(payload: Json<LoginRequest>) -> (Status, Result<Json<TokenResponse>
         Ok(user) => user,
         Err(diesel::result::Error::NotFound) => {
             println!("User not found");
-            return (Status::NotFound, Err(Json(MessageResponse { message: "User not found".to_string() })));
+            return (Status::NotFound, Err( "User not found".to_string()));
         },
         Err(_) => {
             println!("Database error occurred");
-            return (Status::InternalServerError, Err(Json(MessageResponse { message: "Internal Server Error".to_string() })));
+            return (Status::InternalServerError, Err("Internal Server Error".to_string()));
         }
     };
 
     // Check if the password is correct
     if !verify_password(&data.password, &user.password) {
         println!("Invalid password");
-        return (Status::Unauthorized, Err(Json(MessageResponse { message: "Invalid password".to_string() })));
+        return (Status::Forbidden, Err("Invalid password".to_string()));
     }
 
     // Attempt to create a JWT for the user
-    let jwt = match create_jwt(&user.email) {
+    let jwt = match create_jwt(user.id) {
         Ok(jwt) => jwt,
         Err(_) => {
             println!("Failed to create JWT");
-            return (Status::InternalServerError, Err(Json(MessageResponse { message: "Internal Server Error".to_string() })));
+            return (Status::InternalServerError, Err( "Internal Server Error".to_string()));
         }
     };
 
     println!("Login successful: User ID {}", user.id);
-    (Status::Ok, Ok(Json(TokenResponse { token: jwt })))
+
+    cookies.add(Cookie::new("token", jwt.clone()));
+    (Status::Ok, Ok(()))
 }

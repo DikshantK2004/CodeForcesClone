@@ -48,7 +48,6 @@ pub struct LeaderboardSubmissionInfo{
 
 #[derive(Debug, Serialize)]
 pub struct LeaderboardRow{
-    pub user_id: i32,
     pub username: String,
     pub cells: Vec<LeaderboardProblem>
 }
@@ -61,7 +60,6 @@ pub struct LeaderboardProblem{
 }
 #[derive(Debug, Serialize, Queryable)]
 pub struct LeaderboardCell{
-    pub user_id: i32,
     pub username: String,
     pub submission_id: i32,
     pub problem_num: i32,
