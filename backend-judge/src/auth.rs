@@ -12,7 +12,6 @@ pub fn verify_password(password: &str, hash: &str) -> bool {
 
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use jsonwebtoken::errors::{ ErrorKind};
-use rocket::futures::TryFutureExt;
 use rocket::request::FromRequest;
 use rocket::serde::{Deserialize, Serialize};
 
@@ -25,11 +24,12 @@ pub struct Claims {
 
 pub struct AuthenticatedUser(pub(crate) i32);
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub enum AuthError{
     NoToken,
     InvalidToken,
     ExpiredToken,
+    Unknown,
 }
 
 use std::fmt;
@@ -40,6 +40,7 @@ impl fmt::Display for AuthError {
             AuthError::NoToken => write!(f, "No token provided."),
             AuthError::InvalidToken => write!(f, "Token is invalid."),
             AuthError::ExpiredToken => write!(f, "Token has expired."),
+            _ => write!(f, "Unknown error."),
         }
     }
 }
@@ -71,7 +72,7 @@ impl<'r>  FromRequest<'r> for AuthenticatedUser {
 
 pub fn create_jwt(user_id: i32) -> Result<String, String>{
     let expiration = Utc::now()
-        .checked_add_signed(chrono::Duration::seconds(5));
+        .checked_add_signed(chrono::Duration::days(30));
 
     if let None = expiration {
         return Err("Could not create the token".to_string());

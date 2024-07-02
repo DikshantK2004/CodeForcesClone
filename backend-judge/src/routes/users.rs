@@ -38,7 +38,6 @@ pub fn create(user: Json<NewUser>) -> (Status, Json<MessageResponse>){
             }))
         },
         Err(Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _)) =>{
-            println!("User already exists");
             // return a message with status
 
             (Status::Conflict, Json(MessageResponse {
@@ -59,7 +58,7 @@ pub fn create(user: Json<NewUser>) -> (Status, Json<MessageResponse>){
 }
 
 #[post("/login", data = "<payload>")]
-pub fn login(payload: Json<LoginRequest>, cookies: &CookieJar<'_>) -> (Status, Result<(), String>){
+pub fn login(payload: Json<LoginRequest>, cookies: &CookieJar<'_>) -> (Status, Result<String, String>){
     let connection = &mut establish_connection();
     let data = payload.into_inner();
 
@@ -99,5 +98,5 @@ pub fn login(payload: Json<LoginRequest>, cookies: &CookieJar<'_>) -> (Status, R
     println!("Login successful: User ID {}", user.id);
 
     cookies.add(Cookie::new("token", jwt.clone()));
-    (Status::Ok, Ok(()))
+    (Status::Ok, Ok(user.username))
 }

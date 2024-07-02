@@ -1,5 +1,5 @@
 use dotenvy::dotenv;
-use rocket::{get, routes};
+use rocket::{catchers, get, routes};
 
 pub mod database;
 pub mod utils;
@@ -15,7 +15,6 @@ use crate::routes::users::{create, index, login};
 use crate::routes::submissions::*;
 pub mod models;
 pub mod schema;
-use std::env;
 use crate::routes::contests::{create_contest, update_contest, get_all_contests, get_particular_contest};
 use crate::routes::problems::{get_all_problems, get_particular_problem};
 

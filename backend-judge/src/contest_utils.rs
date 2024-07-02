@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs::File;
 use std::path::Path;
-use chrono::{DateTime, FixedOffset, NaiveDateTime, Utc};
+use chrono::{DateTime,  NaiveDateTime, Utc};
 use diesel::{PgConnection, QueryDsl, RunQueryDsl};
 use uuid::Uuid;
 use zip::ZipArchive;

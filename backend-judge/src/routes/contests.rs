@@ -114,7 +114,6 @@ pub async fn update_contest(authUser: AuthenticatedUser,contest_id: String, form
     // Get raw file
     let user_id = authUser.0;
     let mut form = formFields.into_inner();
-    let file_name = form.file.raw_name().unwrap().dangerous_unsafe_unsanitized_raw().as_str();
     let data = form.data.into_inner();
 
 
@@ -235,7 +234,7 @@ pub fn get_particular_contest(contest_id: String) -> (Status,Result<Json<Contest
 
     let data = results.unwrap();
     if let Err(_) = check_if_contest_available(data[0].0.start_date){
-        return (Status::Unauthorized ,Err("Contest has not started yet".parse().unwrap()));
+        return (Status::Forbidden,Err("Contest has not started yet".parse().unwrap()));
     }
 
     if data.len() == 0{

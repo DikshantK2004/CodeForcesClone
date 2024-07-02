@@ -1,11 +1,11 @@
 use std::fs::File;
 use std::io::Write;
-use std::process::{Command, Stdio};
+use std::process::{Command};
 use std::sync::mpsc;
 use std::time::Instant;
-use diesel::{QueryDsl, RunQueryDsl};
+use diesel::{ RunQueryDsl};
 use crate::database::establish_connection;
-use crate::models::{NewSubmission, NewTestResult, Problem, Submission};
+use crate::models::{ NewTestResult, Problem, Submission};
 use crate::schema::{submissions, test_results};
 use diesel::expression_methods::ExpressionMethods;
 use itertools::Itertools;
