@@ -1,4 +1,4 @@
-import { fail, type Actions } from "@sveltejs/kit";
+import { error, fail, type Actions } from "@sveltejs/kit";
 
 const readStream = async (stream: ReadableStream<Uint8Array>) => {
     const reader = stream.getReader();
@@ -14,7 +14,7 @@ const readStream = async (stream: ReadableStream<Uint8Array>) => {
     return chunks;
 }
 export const actions ={
-    login: async ({request}) => {
+    login: async ({request, cookies}) => {
 
         const body = await request.formData();
         
@@ -31,10 +31,19 @@ export const actions ={
         let resText = res.body;
         
         const data : string = await readStream(res.body!);
-        
+        console.log(res);
+
+        cookies.set('AuthorizationToken', `Bearer ${data}`, {
+            httpOnly: true,
+            path: '/',
+            secure: true,
+            sameSite: 'strict',
+            maxAge: 60 * 60 * 24 // 1 day
+          });
+
+       
         return res.ok? {
             status: 200,
-            body: data
         } : {
             status: res.status,
             error: data,

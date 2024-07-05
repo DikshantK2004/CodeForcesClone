@@ -1,27 +1,49 @@
-
 <script lang="ts">
-    import "$lib/auth_styles.css";
-	import { error } from "@sveltejs/kit";
-	import type { ActionData, PageData } from "./$types";
+    import { goto } from '$app/navigation';
+    import type { ActionData } from './$types';
 
-    export let form : ActionData;
+    export let form: ActionData;
 
+    let dialogVisible = false;
 
- </script> 
-<form class = "input-form" action="?/login" method="POST" >
+    // Function to show the dialog
+    function showErrorDialog() {
+        dialogVisible = true;
+    }
 
-    {#if form?.error}
-        <p class="error">{form.error}</p>
-    {/if}
+    // Function to hide the dialog
+    function closeDialog() {
+        dialogVisible = false;
+    }
 
-    {#if form?.body}
-        <p class="success">{form.body}</p>
-    {/if}
+    // Redirect on successful login
+    if (form?.status === 200) {
+        goto('/');
+    }
+</script>
 
-    <h1 id="tex"> Login to HELL</h1>
-    <input type= "text" name="email" class= "inputprops" placeholder="email"><br>
-    <input type="password" name="password" class= "inputprops" placeholder="password"><br>
-    <input type="submit"  value="Login" class="buttonprops"><br>
-    <input type="button" value="Register Instead" class="buttonprops">
+<form class="input-form" action="?/login" method="POST">
+    <h1 id="tex">Login to HELL</h1>
+    <input type="password" name="password" class="inputprops" placeholder="password"><br>
+    <input type="submit" value="Login" class="buttonprops"><br>
+    <button type="button" class="buttonprops" on:click={showErrorDialog}>Show Error</button>
     
+    {#if dialogVisible}
+    <dialog open class="error-dialog">
+        <button class="close-button" on:click={closeDialog}>×</button>
+        {@html form?.error || ''}
+    </dialog>
+    {/if}
 </form>
+
+<style>
+    .error-dialog {
+        position: fixed;
+        background-color: white;
+        color: black;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40vw;
+    }
+</style>
