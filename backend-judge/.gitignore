@@ -3,5 +3,5 @@
 Secrets*.toml
 .env
 /media/*
-../tests/
+../tests
 /data/*

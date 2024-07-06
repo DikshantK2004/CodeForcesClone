@@ -98,5 +98,6 @@ pub fn login(payload: Json<LoginRequest>, cookies: &CookieJar<'_>) -> (Status, R
     println!("Login successful: User ID {}", user.id);
 
     cookies.add(Cookie::new("token", jwt.clone()));
+    cookies.add(Cookie::new("username", user.username.clone()));
     (Status::Ok, Ok(user.username))
 }
