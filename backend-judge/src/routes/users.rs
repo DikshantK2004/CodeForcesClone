@@ -22,7 +22,7 @@ pub fn index() -> &'static str {
 }
 
 #[post("/register", data = "<user>")]
-pub fn create(user: Json<NewUser>) -> (Status, Json<MessageResponse>){
+pub fn create(user: Json<NewUser>) -> (Status, Result<String, String>){
     let mut new_user : NewUser =  user.into_inner();
     new_user.password = hash_password(&new_user.password);
     let connection = &mut  establish_connection();
@@ -33,24 +33,18 @@ pub fn create(user: Json<NewUser>) -> (Status, Json<MessageResponse>){
         Ok(user) => {
             println!("User created: {:?}", user);
 
-            (Status::Created, Json(MessageResponse {
-                message: "User created".to_string()
-            }))
+            (Status::Created, Ok("User created".to_string()))
         },
         Err(Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _)) =>{
             // return a message with status
 
-            (Status::Conflict, Json(MessageResponse {
-                message: "User with email or username already already exists".to_string()
-            })
+            (Status::Conflict, Err("User already exists".to_string())
             )
         }
 
         Err(_) => {
             println!("Failed to create user");
-            (Status::InternalServerError, Json(MessageResponse {
-                message: "Internal Server Error: Failed to create user".to_string()
-            }))
+            (Status::InternalServerError, Err("Internal Server Error".to_string()))
         }
     }
 

@@ -5,8 +5,6 @@
     export let closeDialog = () => {
         visible = false;
     };
-    // Event dispatcher for closing the dialog
-    import { createEventDispatcher } from 'svelte';
 
 </script>
 
@@ -25,16 +23,16 @@
 
 <style>
     dialog {
-        position: relative;
-        border: none;
         border-radius: 8px;
-        /* padding: 20px; */
-        background: white;
-        color: black;
-        width: 40vw;
-        max-width: 600px;
+        padding: 10px;
+        background: #f3afaf;
+        text-align: center;
+        font-family: 'Courier New', Courier, monospace;
+        width: auto;
+        max-width: 300px;
+        color: #e82a2a;
         z-index: 1000;
-        /* box-shadow: 0 2px 10px rgba(0,0,0,0.1); */
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     .close-button {
         position: absolute;
@@ -43,17 +41,13 @@
         margin:auto;
         width: 20px;
         border: none;
-        background: black;
+        background: #d33939;
         cursor: pointer;
-        font-size: 24px;
         height: 8px;
     }
-    /* .content {
-        padding: 20px;
-    } */
     .custom-html {
         margin-top: 15px;
-        background: #f4f4f4;
+        background: white;
         padding: 10px;
         border-radius: 4px;
     }
