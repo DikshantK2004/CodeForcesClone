@@ -1,26 +1,23 @@
 import { error, fail, type Actions } from "@sveltejs/kit";
+import { readStream } from "$lib/utils";
 
-const readStream = async (stream: ReadableStream<Uint8Array>) => {
-    const reader = stream.getReader();
-    let chunks = '';
-
-    while (true) {
-        const { value, done } = await reader.read();
-        if (done) {
-            break;
-        }
-        chunks += new TextDecoder().decode(value);
-    }
-    return chunks;
-}
 export const actions ={
     login: async ({request, cookies}) => {
 
+        console.log('login');
         const body = await request.formData();
         
         const email = body.get('email');
         const password = body.get('password');
+        console.log(body);
         
+        if (!email || !password) {
+            return {
+                status: 400,
+                error: 'Email and password are required'
+            };
+        }
+
         const res = await fetch('http://localhost:8000/login', {
             method: 'POST',
             headers: {
