@@ -29,8 +29,21 @@ export const actions ={
         // console.log(res);
         if(! res.ok)
             return fail(res.status, {error: data});
-        console.log(cookies);
+
+        let cookieData = res.headers.get('set-cookie')?.split(',');
         
+
+        cookieData?.map((cookie) => {
+            let [cookieName, ...options] = cookie.split(';');
+            let [name, value] = cookieName.split('=');
+            cookies.set(name, value, {
+                path :'/',
+                maxAge: 60 * 60 * 24 * 7,
+            });
+        });
+      
+
         return redirect(302, '/');
+        
     }
 } satisfies Actions;

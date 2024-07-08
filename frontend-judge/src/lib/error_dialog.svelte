@@ -15,7 +15,7 @@
         <div class="content">
             {@html message || ''}
             {#if htmlContent}
-                <div class="custom-html" bind:innerHTML={htmlContent} contenteditable></div>
+                <div class="custom-html" bind:innerHTML={htmlContent} contenteditable="false"></div>
             {/if}
         </div>
     </dialog>

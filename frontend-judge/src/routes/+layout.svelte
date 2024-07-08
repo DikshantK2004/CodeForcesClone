@@ -1,5 +1,10 @@
+<script>
 
+	import Header from "./Header.svelte";
+    export let username;
+</script>
 
+<Header username={username}/>
 <slot/>
 
 

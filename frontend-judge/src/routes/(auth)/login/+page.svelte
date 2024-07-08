@@ -8,7 +8,7 @@
 
 </script>
 
-<form class="input-form" method="POST" action="?/login"  use:enhance>
+<form class="input-form" method="POST"   use:enhance>
     <h1 id="tex">Login to HELL</h1>
     <input type="email" name="email" class="inputprops" placeholder="email"> <br>
     <input type="password" name="password" class="inputprops" placeholder="password"><br>
