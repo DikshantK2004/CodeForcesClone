@@ -3,7 +3,7 @@
     import { browser } from '$app/environment';
     import { goto } from '$app/navigation';
 
-    export let username : string ;
+    export let username : string | undefined ;
 
 
     function handleLogin() {
@@ -15,7 +15,7 @@
     }
 
     function handleLogout() {
-        localStorage.removeItem('usernameToken'); // Clean up token
+        
         goto('/'); // Redirect to home page
     }
 </script>

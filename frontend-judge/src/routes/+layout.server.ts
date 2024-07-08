@@ -1,14 +1,10 @@
+import type { Actions } from '@sveltejs/kit';
 import type {LayoutServerData} from './$types';
 
-export async function load({request}){
+export async function load({cookies}){
 
-    let username = request.headers.getSetCookie();
-    console.log(username);
+    let username = cookies.get('username');
     return {
-        status: 200,
-        headers: {
-            'content-type': 'application/json'
-        },
-        body: JSON.stringify({})
-    };
+        "username" : username
+    }
 }

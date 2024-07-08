@@ -1,10 +1,13 @@
-<script>
+<script lang="ts">
+	import type { PageData } from "./$types";
+
 
 	import Header from "./Header.svelte";
-    export let username;
+    export let data : PageData;
+    console.log(data?.username);
 </script>
 
-<Header username={username}/>
+<Header username={data?.username}/>
 <slot/>
 
 
