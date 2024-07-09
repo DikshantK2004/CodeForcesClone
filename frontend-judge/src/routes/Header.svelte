@@ -41,7 +41,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0 20px;
+        padding: 0 40px;
         background: #E0A75E; /* Semi-transparent background */
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         height: 60px;

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { onMount, onDestroy } from 'svelte';
 
 	export let data: PageData;
 
