@@ -5,6 +5,7 @@
     justify-content: space-between;
     font-size: 18px;
     text-align: center;
+    align-items: start;;
 }
 
 .flex-in {

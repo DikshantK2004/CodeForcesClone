@@ -3,9 +3,16 @@
     export let data: PageData;
     import '$lib/contest_styles.css';
     let problem = data.problem;
-    console.log(problem.samples[0].input)
+    console.log(problem)
 </script>
 <div class="flex-in left main">
+
+<h3>
+    {problem.info.name} 
+    <span style="color: gray; font-size:14px;font-weight:normal;">
+        Time Limit:{problem.info.time_limit} ms
+    </span>
+</h3>
 {@html data.problem.statement}
 <h3> Sample Test Cases</h3>
 <table>
