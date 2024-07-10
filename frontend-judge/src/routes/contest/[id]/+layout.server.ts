@@ -5,7 +5,6 @@ const istOffset = 5.5 * 60 * 60 * 1000;
 export const load = async ({fetch, params, cookies}) => {
     const username = cookies.get('username') ?? '1';
     const contestResponse = await fetch(`http://localhost:8000/contests/particular/${params.id}`);
-    console.log(contestResponse);
     if (!contestResponse.ok) {
         return {
             status: contestResponse.status,

@@ -4,7 +4,6 @@
     import '$lib/contest_styles.css';
 	export let data: PageData;
 	const problem_wise_stats = data.contest.problem_wise_stats;
-	console.log(problem_wise_stats);
 	if (data?.error) {
 		error(404, data.error);
 	}

@@ -2,7 +2,6 @@
     import type {PageData} from "./$types";
     import '$lib/contest_styles.css';
     export let data: PageData;
-    console.log(data);
 </script>
 <div class="flex-container">
     <slot/>
