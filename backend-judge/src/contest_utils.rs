@@ -141,7 +141,7 @@ pub fn insert_problems_to_db(num_problems: i32, time_limits: Vec<i32> ,prob_name
             num_tests: num_tests[i as usize],
             contest_id: contest_id.clone(),
             num_samples: num_samples[i as usize],
-            time_limit: time_limits[i as usize],
+            time_limit: time_limits[i as usize]
         };
 
         diesel::insert_into(crate::schema::problems::table)

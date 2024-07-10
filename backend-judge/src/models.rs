@@ -144,7 +144,7 @@ pub struct ContestResponse{
     pub end_date: NaiveDateTime,
     pub created_at: Option<NaiveDateTime,>,
     pub updated_at: Option<NaiveDateTime,>,
-    pub problems: Vec<GeneralProblemInfo>
+    pub problems: Vec<GeneralProblemInfo>,
 }
 
 impl ContestResponse{

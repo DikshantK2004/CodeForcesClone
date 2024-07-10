@@ -26,6 +26,7 @@ pub struct GeneralProblemInfo{
     pub contest_id: String,
     pub num_samples: i32,
     pub time_limit: i32,
+    pub accepted:i32,
 }
 
 #[derive(Debug, Queryable, Serialize, Clone)]

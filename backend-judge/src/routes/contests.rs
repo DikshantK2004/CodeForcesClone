@@ -204,8 +204,9 @@ pub async fn update_contest(authUser: AuthenticatedUser,contest_id: String, form
 #[get("/all")]
 pub fn get_all_contests() -> Result<Json<Vec<GeneralContestInfo>>, String>{
     let connection = &mut establish_connection();
-    let results =  crate::schema::contests::table.select(GeneralContestInfo::as_select()).load
-    :: <GeneralContestInfo>(connection);
+    let results =  crate::schema::contests::table.select(GeneralContestInfo::as_select())
+        .order_by(crate::schema::contests::start_date.desc())
+        .load:: <GeneralContestInfo>(connection);
 
     if let Err(e) = results{
         return Err(format!("Error getting contests: {:?}", e));
