@@ -34,7 +34,7 @@
 							{#if contest.start_msecs - Date.now() > 0}
 								Not Started
 							{:else if contest.start_msecs - Date.now() <= 0 && contest.end_msecs - Date.now() > 0}
-								<a href="/contest/{contest.id}">Join</a>
+								<a href="/contest/{contest.id}" data-sveltekit-reload>Join</a>
 							{/if}
 						</td>
 					</tr>
@@ -64,7 +64,7 @@
 						</td>
 						<td>{contest.duration}</td>
 						<td class="status">
-							<a href="/contest/{contest.id}"> Enter </a>
+							<a href="/contest/{contest.id}" data-sveltekit-reload> Enter </a>
 						</td>
 					</tr>
 				{/if}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from "./$types";
+	import Error from "./+error.svelte";
 
 
 	import Header from "./Header.svelte";
@@ -9,7 +10,6 @@
 
 <Header username={data?.username}/>
 <slot/>
-
 
 
 <style>

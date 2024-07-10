@@ -1,7 +1,14 @@
 <script lang="ts">
+	import { error } from '@sveltejs/kit';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
+    const problem_wise_stats = data.contest.problem_wise_stats;
+    if(data?.error){
+        error(404, data.error);
+    }
+
+    console.log(data);
 </script>
 
 <div class="flex-container">
@@ -13,22 +20,34 @@
                 <th>#</th>
                 <th>Problem Name</th>
                 <th>Time Limit(in ms)</th>
+                <th> Accepted</th>
             </tr>
         </thead>
         <tbody>
             {#each data.contest.problems as problem}
-                <tr>
+            {#if problem_wise_stats[problem.id]}
+                <tr class="colored-row-{problem_wise_stats[problem.id].accepted > 0 ? 'green' : 'red'}">
                     <td>{problem.problem_num}</td>
                     <td>{problem.name}</td>
                     <td>{problem.time_limit}</td>
+                    <td>{problem.accepted}</td>
                 </tr>
+            {:else}
+            <tr>
+                <td>{problem.problem_num}</td>
+                <td>{problem.name}</td>
+                <td>{problem.time_limit}</td>
+                <td>{problem.accepted}</td>
+            </tr>
+            {/if}
+                
             {/each}
         </tbody>
      </table>
     </div>
 	<div class="flex-in right">
 		<div style="font-weight:bold; font-size:24px;padding-bottom:0px; ">
-			<a href="/contest/{data.contest.id}">{data.contest.name}</a><br />
+			<a href="/contest/{data.contest.id}" data-sveltekit-reload>{data.contest.name}</a><br />
 			<div style="font-size:20px; color:#615EFC;padding-bottom:0px;">
 				{#if Date.now() < data.contest.end_msecs}
 					Contest is live
@@ -38,15 +57,23 @@
 			</div>
 		</div>
             <div style="height:25px; background-color:#EfEDEB80; width:100%; padding:0;"></div>
-            <a href="/contest/{data.contest.id}">Problems</a>
-            <a href="/">Submissions</a>
-            <a href="/">Leaderboard</a>
-            <a href="/">Submit Code</a>
+            <a href="/contest/{data.contest.id}" data-sveltekit-reload>Problems</a>
+            <a href="/" data-sveltekit-reload>Submissions</a>
+            <a href="/" data-sveltekit-reload>Leaderboard</a>
+            <a href="/" data-sveltekit-reload>Submit Code</a>
         
 	</div>
 </div>
 
 <style>
+
+    .colored-row-green{
+        background-color: #def9c4;
+    }
+
+    .colored-row-red{
+        background-color: #f9c4c4;
+    }
 	.flex-container {
 		display: flex;
 		padding: 40px;

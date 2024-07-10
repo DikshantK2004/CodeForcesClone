@@ -22,7 +22,7 @@
 
 <nav class="header">
     <div class="logo">
-        <a href="/">MyApp</a>
+        <a href="/" data-sveltekit-reload>MyApp</a>
     </div>
     <div class="navigation">
         {#if username}
