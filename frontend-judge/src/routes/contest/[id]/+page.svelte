@@ -22,17 +22,17 @@
 		</thead>
 		<tbody>
 			{#each data.contest.problems as problem}
-				{#if problem_wise_stats[problem.id]}
-					<tr class="colored-row-{problem_wise_stats[problem.id].accepted > 0 ? 'green' : 'red'}">
+				{#if problem_wise_stats && problem_wise_stats[problem.problem_num]}
+					<tr class="colored-row-{problem_wise_stats[problem.problem_num].accepted > 0 ? 'green' : 'red'}">
 						<td>{problem.problem_num}</td>
-						<td>{problem.name}</td>
+						<td><a href="/contest/{data.contest.id}/problems/{problem.problem_num}">{problem.name}</a></td>
 						<td>{problem.time_limit}</td>
 						<td>{problem.accepted}</td>
 					</tr>
 				{:else}
 					<tr>
 						<td>{problem.problem_num}</td>
-						<td>{problem.name}</td>
+						<td><a href="/contest/{data.contest.id}/problems/{problem.problem_num}">{problem.name}</a></td>
 						<td>{problem.time_limit}</td>
 						<td>{problem.accepted}</td>
 					</tr>

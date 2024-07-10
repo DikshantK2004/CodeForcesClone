@@ -18,7 +18,8 @@
 		</div>
             <div style="height:25px; background-color:#EfEDEB80; width:100%; padding:0;"></div>
             <a href="/contest/{data.contest.id}" data-sveltekit-reload>Problems</a>
-            <a href="/" data-sveltekit-reload>Submissions</a>
+            <a href="/contest/{data.contest.id}/submissions" data-sveltekit-reload>Submissions</a>
+            <a href="/contest/{data.contest.id}/submissions/my" data-sveltekit-reload>My Submissions</a>
             <a href="/" data-sveltekit-reload>Leaderboard</a>
             <a href="/" data-sveltekit-reload>Submit Code</a>
         

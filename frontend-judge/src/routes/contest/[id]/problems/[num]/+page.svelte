@@ -15,6 +15,7 @@
 </h3>
 {@html data.problem.statement}
 <h3> Sample Test Cases</h3>
+{#if problem.samples?.length > 0}
 <table>
     <thead>
         <th style="width:70%;"> Input</th>
@@ -29,6 +30,7 @@
         {/each}
     </tbody>
 </table>
+{/if}
 </div>
 
 <style>
@@ -36,6 +38,7 @@
         text-align: left;
         font-family: 'PT Sans Narrow';
         padding: 20px;
+        width:100%;
     }
 
     table {
