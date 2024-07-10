@@ -1,5 +1,8 @@
 <script lang="ts">
+    import snarkdown from 'snarkdown';
 
 </script>
 
-An error occured
+<div>
+    {@html snarkdown('**An Error Occured**')}
+</div>
