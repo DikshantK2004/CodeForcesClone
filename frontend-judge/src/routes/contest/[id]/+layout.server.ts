@@ -7,8 +7,6 @@ const istOffset = 5.5 * 60 * 60 * 1000;
 export const load = async ({fetch, params, cookies}) => {
     const username = cookies.get('username') ?? '1';
     const contestResponse = await fetch(`http://localhost:8000/contests/particular/${params.id}`);
-    let hl = await readStream(contestResponse.body!);
-    console.log(hl);
     if (!contestResponse.ok) {
         return {
             status: contestResponse.status,
@@ -17,7 +15,6 @@ export const load = async ({fetch, params, cookies}) => {
     }
 
     const contest = await contestResponse.json();
-    console.log(contest);
     const userContestResponse = await fetch(`http://localhost:8000/submit/user_contest/${username}/${params.id}`);
 
     // const startMillis = new Date(contest.start_date).getTime() + istOffset;

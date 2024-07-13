@@ -18,8 +18,8 @@ export const load = async ({fetch} ) =>{
         contest.start_date = start_date.toDateString();
         contest.start_time = start_date.toLocaleTimeString();
         contest.duration = ((end_millis - start_mills)/(1000*60*60)).toFixed(2);
-        contest.start_msecs = start_mills;
-        contest.end_msecs = end_millis;
+        contest.start_msecs = start_mills + istOffset;
+        contest.end_msecs = end_millis + istOffset;
         return contest;
     });
 

@@ -21,7 +21,7 @@
             <a href="/contest/{data.contest.id}/submissions" data-sveltekit-reload>Submissions</a>
             <a href="/contest/{data.contest.id}/submissions/my" data-sveltekit-reload>My Submissions</a>
             <a href="/" data-sveltekit-reload>Leaderboard</a>
-            <a href="/" data-sveltekit-reload>Submit Code</a>
+            <a href="/contest/{data.contest.id}/submit" data-sveltekit-reload>Submit Code</a>
         
 	</div>
 

@@ -3,7 +3,6 @@
     export let data: PageData;
     import '$lib/contest_styles.css';
     let problem = data.problem;
-    console.log(problem)
 </script>
 <div class="flex-in left main">
 

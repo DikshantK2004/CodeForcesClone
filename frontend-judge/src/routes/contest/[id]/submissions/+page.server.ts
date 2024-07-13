@@ -15,6 +15,5 @@ export const load = async ({params, fetch}) =>{
         submission.created_at = new Date(submission.created_at).toLocaleString();
         
     });
-    console.log(submissions);
     return {submissions}
 }

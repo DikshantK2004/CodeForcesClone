@@ -47,10 +47,7 @@
 </div>
 
 <style>
-    .left {
-        width: 100%;
-        padding: 20px;
-    }
+    
     table {
         width: 100%;
         border-collapse: collapse;
