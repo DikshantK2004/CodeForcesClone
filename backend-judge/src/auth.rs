@@ -23,7 +23,7 @@ pub struct Claims {
 
 
 pub struct AuthenticatedUser(pub(crate) i32);
-
+pub struct NotStrictAuthenticatedUser(pub(crate) Option<i32>);
 #[derive(Debug, Serialize)]
 pub enum AuthError{
     NoToken,
@@ -61,8 +61,6 @@ impl<'r>  FromRequest<'r> for AuthenticatedUser {
         let decoded = decode_jwt(&token);
         match decoded {
             Ok(claims) => {
-                println!("User id: {:?}", claims.user_id);
-                println!("Token expires at: {:?}", claims.exp);
                 rocket::request::Outcome::Success(AuthenticatedUser(claims.user_id))
             },
             Err(e) => rocket::request::Outcome::Error((rocket::http::Status::Unauthorized,  e)),

@@ -207,9 +207,9 @@ pub fn check_if_contest_available(start_date: NaiveDateTime) -> Result<(), ()>{
     let current_utc: DateTime<Utc> = Utc::now();
 
     // Convert current IST DateTime to NaiveDateTime for comparison
-    let current_ist_naive = current_utc.naive_local();
-    println!("Current IST: {:?}, Start date: {:?}", current_ist_naive, start_date);
-    if start_date > current_ist_naive {
+    let current_utc_naive = current_utc.naive_utc();
+    println!("Current UTC: {:?} Start Date:{:?}", current_utc_naive, start_date);
+    if start_date  > current_utc_naive {
         return Err(());
     }
     Ok(())

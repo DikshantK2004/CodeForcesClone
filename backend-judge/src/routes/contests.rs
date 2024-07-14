@@ -225,6 +225,7 @@ pub fn get_particular_contest(contest_id: String) -> (Status,Result<Json<Contest
     let results =  crate::schema::contests::table.inner_join(crate::schema::problems::table)
                     .filter(crate::schema::contests::id.eq(contest_id.clone()))
                     .select((crate::schema::contests::all_columns, GeneralProblemInfo::as_select()))
+        .order_by(crate::schema::problems::problem_num.asc())
                     .load::<(Contest, GeneralProblemInfo)>(connection);
 
     if let Err(e) = results{
@@ -234,13 +235,14 @@ pub fn get_particular_contest(contest_id: String) -> (Status,Result<Json<Contest
 
 
     let data = results.unwrap();
+    if data.len() == 0{
+        return (Status::NotFound, Err(String::from("No such contest found")));
+    }
+
     if let Err(_) = check_if_contest_available(data[0].0.start_date){
         return (Status::Forbidden,Err("Contest has not started yet".parse().unwrap()));
     }
 
-    if data.len() == 0{
-        return (Status::NotFound, Err(String::from("No such contest found")));
-    }
 
     let res = ContestResponse::from_contest(data[0].0.clone(), data.iter().map(|x| GeneralProblemInfo::from(x.1.clone())).collect());
 

@@ -33,7 +33,8 @@ pub struct GeneralProblemInfo{
 pub struct GeneralSubmissionInfo{
     pub id: i32,
     pub username: String,
-    pub problem_id: i32,
+    pub ext: String,
+    pub problem_num: i32,
     pub problem_name: String,
     pub created_at: NaiveDateTime,
     pub verdict: String,

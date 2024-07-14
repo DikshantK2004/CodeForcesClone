@@ -91,7 +91,8 @@ pub fn general_submission_handler(id: String) -> Result<Json<GeneralSubmissionIn
         .select((
             submission_columns::id,
             user_columns::username,
-            submission_columns::problem_id,
+            submission_columns::extension,
+            problem_columns::problem_num,
             problem_columns::name,
             submission_columns::created_at,
             submission_columns::verdict,
@@ -117,7 +118,8 @@ pub fn user_submissions(user_name: String) -> (Status, Result<Json<Vec<GeneralSu
         .select((
             submission_columns::id,
             user_columns::username,
-            submission_columns::problem_id,
+            submission_columns::extension,
+            problem_columns::problem_num,
             problem_columns::name,
             submission_columns::created_at,
             submission_columns::verdict,
@@ -143,7 +145,8 @@ pub fn user_contest_submissions(user_name: String, contest_id: String) -> (Statu
         .select((
             submission_columns::id,
             user_columns::username,
-            submission_columns::problem_id,
+            submission_columns::extension,
+            problem_columns::problem_num,
             problem_columns::name,
             submission_columns::created_at,
             submission_columns::verdict,
@@ -169,7 +172,8 @@ pub fn contest_submissions(contest_id: String) -> (Status, Result<Json<Vec<Gener
         .select((
             submission_columns::id,
             user_columns::username,
-            submission_columns::problem_id,
+            submission_columns::extension,
+            problem_columns::problem_num,
             problem_columns::name,
             submission_columns::created_at,
             submission_columns::verdict,
