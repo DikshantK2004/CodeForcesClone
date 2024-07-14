@@ -7,7 +7,6 @@
     export let data: PageData;
     export let form: FormData;
 
-    console.log(data.contest.problems);
 </script>
 
 <div class="flex-in left">
