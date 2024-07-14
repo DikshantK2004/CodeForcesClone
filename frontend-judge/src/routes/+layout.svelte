@@ -5,6 +5,7 @@
 
 	import Header from "./Header.svelte";
     export let data : PageData;
+    console.log(data?.username);
 </script>
 
 <Header username={data?.username}/>
