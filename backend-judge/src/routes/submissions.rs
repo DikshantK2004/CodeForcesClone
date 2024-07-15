@@ -1,4 +1,4 @@
-use diesel::{JoinOnDsl, QueryDsl, RunQueryDsl, SelectableHelper};
+use diesel::{BoolExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl, SelectableHelper};
 use rocket::{get, post};
 use rocket::http::Status;
 use rocket::serde::json::Json;
@@ -10,6 +10,7 @@ use chrono::NaiveDateTime;
 use diesel::associations::HasTable;
 use crate::schema::problems::dsl::problems;
 use crate::schema::submissions::dsl::submissions;
+use crate::schema::test_cases::columns as test_case_columns;
 use crate::schema::problems::columns as problem_columns;
 use crate::schema::submissions::columns as submission_columns;
 use crate::schema::users::columns as user_columns;
@@ -23,6 +24,7 @@ use crate::schema::test_results::dsl::test_results;
 use crate::schema::users::dsl::users;
 use crate::schema::contests::{columns as contest_columns};
 use crate::schema::contests::dsl::contests;
+use crate::schema::test_cases::dsl::test_cases;
 
 
 #[post("/", data = "<sub>")]
@@ -257,11 +259,20 @@ pub fn particular_submission(submission_id: String) -> (Status,Result<Json<Submi
 
     let connection = &mut establish_connection();
     let sub = submissions
-        .inner_join(test_results.on(submission_columns::id.eq(test_result_columns::submission_id)))
-        .select((Submission::as_select(), TestResultResponse::as_select()))
+        .select(Submission::as_select())
         .filter(submission_columns::id.eq(submission_id))
-        .order_by(test_result_columns::test_num.asc())
-        .load::<(Submission, TestResultResponse)>(connection);
+        .first::<Submission>(connection);
+
+    let tests = test_results
+        .inner_join(submissions.on(test_result_columns::submission_id.eq(submission_columns::id)))
+        .inner_join(problems.on(submission_columns::problem_id.eq(problem_columns::id)))
+        .inner_join(test_cases.on((problem_columns::contest_id.eq(test_case_columns::contest_id).and(problem_columns::problem_num.eq(test_case_columns::problem_num)).and(test_result_columns::test_num.eq(test_case_columns::test_num)))))
+        .select((test_result_columns::test_num, test_result_columns::out, test_result_columns::verdict, test_result_columns::time_taken, test_case_columns::content))
+        .filter(submission_columns::id.eq(submission_id))
+        .load::<TestResultResponse>(connection);
+
+
+
 
     let end_date = problems
         .inner_join(submissions.on(problem_columns::id.eq(submission_columns::problem_id)))
@@ -280,17 +291,16 @@ pub fn particular_submission(submission_id: String) -> (Status,Result<Json<Submi
     if let Err(e) = sub{
         return (Status::InternalServerError, Err(format!("Error fetching submission: {}", e)));
     }
-    let sub = sub.unwrap();
 
-    if sub.len() == 0{
-        return (Status::NotFound, Err(String::from("No such submission found")));
+    if let Err(e) = tests{
+        return (Status::InternalServerError, Err(format!("Error fetching test results: {}", e)));
     }
 
-    let test_results_vec : Vec<TestResultResponse>= sub.iter()
-        .map(|(_, test_result)| test_result.clone())
-        .collect();
+    let tests : Vec<TestResultResponse> = tests.unwrap();
+    let sub = sub.unwrap();
 
-    let response = SubmissionResponse::from_submission(&sub[0].0, test_results_vec);
+
+    let response = SubmissionResponse::from_submission(&sub, tests);
 
     if response.created_at < end_date{
         return (Status::Forbidden, Err(String::from("Submission is not available yet")));

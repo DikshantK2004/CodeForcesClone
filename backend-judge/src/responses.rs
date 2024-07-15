@@ -86,13 +86,13 @@ impl LeaderboardSubmissionInfo{
 
 
 
-#[derive(Debug, Serialize, Selectable, Queryable,Clone)]
-#[diesel(table_name = test_results)]
+#[derive(Debug, Serialize, Queryable,Clone)]
 pub struct TestResultResponse{
     pub test_num: i32,
     pub out: String,
     pub verdict: String,
-    pub time_taken: i32
+    pub time_taken: i32,
+    pub content: String,
 }
 
 #[derive(Debug, Serialize)]
