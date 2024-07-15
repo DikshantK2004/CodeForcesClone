@@ -96,9 +96,10 @@ pub async fn create_contest(authUser: AuthenticatedUser, formFields: Form<Contes
         .expect("Error saving contest");
 
     // save the problems in the db
-    insert_problems_to_db(contest.num_problems,time_limits ,prob_names, num_tests, num_samples, new_id.clone(), connection);
+    insert_problems_to_db(contest.num_problems,&time_limits ,&prob_names, &num_tests, num_samples, new_id.clone(), connection);
 
-
+    // insert testcases to db
+    insertTestCasesToDb(&*new_id, contest.num_problems, &num_tests, connection);
 
     let remove_zip_status = remove_zip(file_path.as_str());
     if let Err(e) = remove_zip_status{
@@ -187,8 +188,10 @@ pub async fn update_contest(authUser: AuthenticatedUser,contest_id: String, form
     }
 
     // save the problems in the db
-    insert_problems_to_db(contest.num_problems, time_limits,prob_names, num_tests, num_samples, contest_id.clone(), connection);
+    insert_problems_to_db(contest.num_problems, &time_limits,&prob_names, &num_tests, num_samples, contest_id.clone(), connection);
 
+    // save testcases
+    insertTestCasesToDb(&*contest_id, contest.num_problems, &num_tests, connection);
 
 
     let remove_zip_status = remove_zip(file_path.as_str());

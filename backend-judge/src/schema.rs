@@ -49,6 +49,17 @@ diesel::table! {
 }
 
 diesel::table! {
+    test_cases (contest_id, problem_num, test_num) {
+        #[max_length = 255]
+        contest_id -> Varchar,
+        problem_num -> Int4,
+        test_num -> Int4,
+        #[max_length = 1500]
+        content -> Varchar,
+    }
+}
+
+diesel::table! {
     test_results (id) {
         id -> Int4,
         submission_id -> Int4,
@@ -85,6 +96,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     contests,
     problems,
     submissions,
+    test_cases,
     test_results,
     users,
 );

@@ -1,8 +1,9 @@
+use std::io::{BufRead, Read};
 use chrono::{NaiveDateTime};
 use diesel::prelude::*;
 use rocket::data::FromData;
 use rocket::serde::{Deserialize, Serialize};
-use crate::schema::{users, problems, contests, submissions, test_results};
+use crate::schema::{users, problems, contests, submissions, test_results,test_cases};
 use rocket::{FromForm};
 use rocket::fs::TempFile;
 use rocket::serde::json::Json;
@@ -216,6 +217,38 @@ pub struct NewTestResult{
     pub out: String,
     pub verdict: String,
     pub time_taken: i32,
+}
+
+#[derive(Debug, Serialize, Queryable, Selectable, Insertable)]
+#[diesel(table_name = test_cases)]
+pub struct TestCase{
+    pub contest_id: String,
+    pub problem_num: i32,
+    pub test_num:i32,
+    pub content: String,
+}
+
+
+impl TestCase{
+    pub fn fromFile(contest_id:&str, problem_num:i32, test_num:i32) -> Result<TestCase, String>{
+        let filename = "./data/".to_string() + contest_id + format!("/problem_{}/testcases/input_{}.txt", problem_num, test_num).as_str();
+        let file = std::fs::File::open(filename);
+        if let Err(e) = file{
+            return Err(String::from("Error reading file"));
+        }
+
+        let file = file.unwrap();
+        let reader = std::io::BufReader::new(file);
+        let mut content = String::new();
+        // fetch the first 1500 characters of the testcase content only
+        reader.take(1500).read_to_string(&mut content);
+        Ok(TestCase{
+            contest_id: contest_id.to_string(),
+            problem_num,
+            test_num,
+            content
+        })
+    }
 }
 // #[derive(Debug, Serialize, Deserialize)]
 // pub struct ProblemInput{

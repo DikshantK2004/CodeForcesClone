@@ -6,7 +6,7 @@ use diesel::{PgConnection, QueryDsl, RunQueryDsl};
 use uuid::Uuid;
 use zip::ZipArchive;
 use crate::database::establish_connection;
-use crate::models::{Problem, SampleTestCase};
+use crate::models::{Problem, SampleTestCase, TestCase};
 use diesel::ExpressionMethods;
 use crate::schema::users::star; // zip 0.5.13
 
@@ -132,7 +132,7 @@ pub fn remove_existing_contest(contest_id: &str) -> Result<(), String>{
     Ok(())
 }
 
-pub fn insert_problems_to_db(num_problems: i32, time_limits: Vec<i32> ,prob_names: Vec<String>, num_tests: Vec<i32>, num_samples: Vec<i32>, contest_id: String, connection: &mut PgConnection){
+pub fn insert_problems_to_db(num_problems: i32, time_limits: &Vec<i32> ,prob_names: &Vec<String>, num_tests: &Vec<i32>, num_samples: Vec<i32>, contest_id: String, connection: &mut PgConnection){
     for i in 0..num_problems{
         let new_problem_id = Uuid::new_v4().to_string();
         let problem = Problem{
@@ -177,6 +177,31 @@ pub fn gather_samples(contest_id: &str, problem_num: i32, num_samples: i32) -> R
 }
 
 
+pub fn gatherTestCases(contest_id: &str, num_problems: i32, num_tests: &Vec<i32>) -> Result<Vec<TestCase>, String>{
+    let mut test_cases = Vec::new();
+    for i in 1..=num_problems{
+        for j in 1..=num_tests[(i - 1) as usize]{
+            let test = TestCase::fromFile(contest_id, i, j)?;
+            test_cases.push(test);
+
+        }
+    }
+
+    Ok(test_cases)
+}
+
+pub fn insertTestCasesToDb(contest_id:&str, num_problems:i32, num_tests:&Vec<i32>, conn: &mut PgConnection) -> Result<(), String>{
+    let cases = gatherTestCases(contest_id, num_problems, num_tests)?;
+    let res = diesel::insert_into(crate::schema::test_cases::table)
+        .values(&cases)
+        .execute(conn);
+
+    if let Err(e) = res{
+        return Err("Error inserting test cases".to_string());
+    }
+
+    Ok(())
+}
 pub fn compile_validators(contest_id: &str, num_problems: i32) -> Result<(), String> {
     for i in 1..=num_problems {
         let validator_file_path = Path::new("./data/").join(contest_id).join(format!("problem_{}/solution.cpp", i));
