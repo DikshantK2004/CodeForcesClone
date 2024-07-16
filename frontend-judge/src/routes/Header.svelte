@@ -13,8 +13,11 @@
 		goto('/register');
 	}
 
-	function handleLogout() {
-		goto('/'); // Redirect to home page
+	async function handleLogout() {
+		await fetch('/api/logout', {
+			method: "POST"
+		});
+		window.location.reload();
 	}
 </script>
 

@@ -94,3 +94,9 @@ pub fn login(payload: Json<LoginRequest>, cookies: &CookieJar<'_>) -> (Status, R
     cookies.add(Cookie::new("username", user.username.clone()));
     (Status::Ok, Ok(user.username))
 }
+
+
+#[post("/guard")]
+pub fn guard(auth_usr: AuthenticatedUser)-> Status{
+Status::Ok
+}

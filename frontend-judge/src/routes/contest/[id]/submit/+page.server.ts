@@ -29,6 +29,11 @@ export const actions = {
 			}
 		});
 
+		if(res.status ==404){
+			cookies.delete('username', {path: "/"});
+			cookies.delete('token', {path: "/"});
+		}
+
 		if (!res.ok) {
 			return fail(res.status, { error: "couldn't submit the code" });
 		}

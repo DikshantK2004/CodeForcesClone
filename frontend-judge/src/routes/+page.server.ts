@@ -1,10 +1,11 @@
-import { fail } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 
 const istOffset = 5.5 * 60 * 60 * 1000; // IST offset in milliseconds
 
-export const load = async ({ fetch }) => {
-	let res = await fetch('http://localhost:8000/contests/all');
+export const load = async ({ fetch ,cookies}) => {
 
+	let res = await fetch('http://localhost:8000/contests/all');
+	
 	if (!res.ok) return fail(res.status, { error: 'Failed to fetch contests' });
 	let data = await res.json();
 
