@@ -83,18 +83,19 @@
 		background-color: #f2f2f2;
 		padding: 1px;
 		border-radius: 10px;
-        box-shadow: 4px 4px 0 #0b0b0b40;
+		box-shadow: 4px 4px 0 #0b0b0b40;
 	}
 
 	table {
 		border-collapse: collapse;
 		margin: 20px;
 	}
-	th,td {
+	th,
+	td {
 		padding: 15px;
 		text-align: center;
 		border-bottom: 1px solid #ddd;
-        width: 125px;
+		width: 125px;
 	}
 
 	th {

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { error } from '@sveltejs/kit';
 	import type { PageData } from './$types';
-    import '$lib/contest_styles.css';
+	import '$lib/contest_styles.css';
 	export let data: PageData;
 	const problem_wise_stats = data.contest.problem_wise_stats;
 	if (data?.error) {
@@ -23,16 +23,26 @@
 		<tbody>
 			{#each data.contest.problems as problem}
 				{#if problem_wise_stats && problem_wise_stats[problem.problem_num]}
-					<tr class="colored-row-{problem_wise_stats[problem.problem_num].accepted > 0 ? 'green' : 'red'}">
+					<tr
+						class="colored-row-{problem_wise_stats[problem.problem_num].accepted > 0
+							? 'green'
+							: 'red'}"
+					>
 						<td>{problem.problem_num}</td>
-						<td><a href="/contest/{data.contest.id}/problems/{problem.problem_num}">{problem.name}</a></td>
+						<td
+							><a href="/contest/{data.contest.id}/problems/{problem.problem_num}">{problem.name}</a
+							></td
+						>
 						<td>{problem.time_limit}</td>
 						<td>{problem.accepted}</td>
 					</tr>
 				{:else}
 					<tr>
 						<td>{problem.problem_num}</td>
-						<td><a href="/contest/{data.contest.id}/problems/{problem.problem_num}">{problem.name}</a></td>
+						<td
+							><a href="/contest/{data.contest.id}/problems/{problem.problem_num}">{problem.name}</a
+							></td
+						>
 						<td>{problem.time_limit}</td>
 						<td>{problem.accepted}</td>
 					</tr>
